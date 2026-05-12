@@ -74,3 +74,11 @@
 .auth-links { display: flex; justify-content: center; margin-top: 32px; font-size: 14px; }
 .auth-links a { color: var(--text-sub); text-decoration: none; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
 .auth-links a:hover { color: var(--white); }
+
+.success-text {
+    color: var(--success);
+    font-size: 12px;
+    margin-top: 6px;
+    margin-left: 4px;
+    font-weight: 500;
+}

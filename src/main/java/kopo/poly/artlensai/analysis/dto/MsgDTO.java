@@ -1,4 +1,4 @@
-package kopo.poly.artlensai.user.dto;
+package kopo.poly.artlensai.analysis.dto;
 
 import lombok.Builder;
 

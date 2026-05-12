@@ -1,4 +1,4 @@
-package kopo.poly.controller.response;
+package kopo.poly.artlensai.global.response;
 
 import lombok.Builder;
 import lombok.Data;

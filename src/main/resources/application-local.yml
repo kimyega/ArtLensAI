@@ -1,0 +1,17 @@
+# POSTGRES Settings
+POSTGRES_URL: jdbc:postgresql://192.168.175.128:5432/mydb
+POSTGRES_USERNAME: poly
+POSTGRES_PASSWORD: 1234
+
+# MONGO Settings
+MONGO_URI: mongodb://poly:1234@192.168.175.128:27017/myMongo
+
+
+# =========================
+# SMTP (Naver)
+# =========================
+MAIL_HOST: smtp.naver.com
+MAIL_PORT: 587
+MAIL_USERNAME: kimyega@naver.com
+MAIL_PASSWORD: WG2LNB9422HZ
+MAIL_FROM: kimyega@naver.com

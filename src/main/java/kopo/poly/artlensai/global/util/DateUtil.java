@@ -1,4 +1,4 @@
-package kopo.poly.util;
+package kopo.poly.artlensai.global.util;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;

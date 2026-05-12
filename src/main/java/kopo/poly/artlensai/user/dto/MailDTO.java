@@ -1,4 +1,7 @@
 package kopo.poly.artlensai.user.dto;
 
-public class MailDTO {
+public record MailDTO (
+        String email,
+        String code
+){
 }

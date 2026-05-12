@@ -1,4 +1,10 @@
 package kopo.poly.artlensai.analysis.dto;
 
-public class ArtistResultDTO {
-}
+import lombok.Builder;
+
+@Builder
+public record ArtistResultDTO(
+        Long artistId,
+        String artistName,
+        Double similarity
+) {}

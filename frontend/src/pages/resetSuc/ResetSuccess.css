@@ -1,0 +1,180 @@
+/* Pretendard 폰트 불러오기 (전역 CSS에 있다면 생략 가능) */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+:root {
+    --sky: #4AADDF;
+    --sky-dark: #2E8FBF;
+    --bg-dark: #121418;
+    --bg-card: #1C1E23;
+    --white: #FFFFFF;
+    --text-sub: #94A3B8;
+    --success: #34D399; /* 성공을 알리는 부드러운 민트 그린 */
+    --border: rgba(255, 255, 255, 0.08);
+}
+
+/* body 대신 wrapper에 적용하여 다른 페이지 레이아웃 침범 방지 */
+.reset-complete-wrapper {
+    font-family: 'Pretendard', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--white);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.reset-complete-wrapper * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* =========================================
+   LEFT SECTION (Visual & Branding)
+   ========================================= */
+.reset-complete-wrapper .left-section {
+    flex: 1.2;
+    position: relative;
+    background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.9)),
+    url('https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=1600&q=80');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px;
+}
+
+.reset-complete-wrapper .logo {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    z-index: 10;
+}
+
+.reset-complete-wrapper .logo-box {
+    width: 32px;
+    height: 32px;
+    background: var(--sky);
+    border-radius: 8px;
+}
+
+.reset-complete-wrapper .visual-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 5;
+}
+
+.reset-complete-wrapper .visual-title {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 24px;
+    letter-spacing: -0.04em;
+}
+
+.reset-complete-wrapper .visual-title span {
+    color: var(--success);
+}
+
+.reset-complete-wrapper .visual-desc {
+    font-size: 16px;
+    color: var(--text-sub);
+    max-width: 480px;
+    line-height: 1.6;
+}
+
+.reset-complete-wrapper .visual-footer {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 2px;
+}
+
+.reset-complete-wrapper .left-section::after {
+    content: "";
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDgwIDgwIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM5QzRBNkEiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTAgMGg0MHY0MEgwVjB6bTIwIDIwaDIwdjIwSDIWMjB6TTAgMjBoMjB2MjBIMFYyMHoyMCAwaDIwdjIwSDIwVjB6Ii8+PC9nPjwvZz48L3N2Zz4=');
+    opacity: 0.3;
+    z-index: 1;
+}
+
+/* =========================================
+   RIGHT SECTION (Success Message)
+   ========================================= */
+.reset-complete-wrapper .right-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px;
+    background-color: var(--bg-card);
+}
+
+.reset-complete-wrapper .login-container {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* ✨ 성공 체크 아이콘 ✨ */
+.reset-complete-wrapper .success-icon {
+    width: 72px;
+    height: 72px;
+    background: rgba(52, 211, 153, 0.1);
+    color: var(--success);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 24px auto;
+}
+
+.reset-complete-wrapper .success-icon svg {
+    width: 36px;
+    height: 36px;
+}
+
+.reset-complete-wrapper .login-header h2 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+}
+
+.reset-complete-wrapper .login-header p {
+    font-size: 15px;
+    color: var(--text-sub);
+    margin-bottom: 40px;
+    line-height: 1.6;
+}
+
+/* ✨ 메인 로그인 이동 버튼 ✨ */
+.reset-complete-wrapper .btn-primary {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 18px;
+    background: var(--sky);
+    color: var(--white);
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 20px rgba(74, 173, 223, 0.3);
+}
+
+.reset-complete-wrapper .btn-primary:hover {
+    background: var(--sky-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(74, 173, 223, 0.4);
+}

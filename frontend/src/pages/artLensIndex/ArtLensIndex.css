@@ -1,20 +1,16 @@
-/* ArtLensIndex.css */
-
-/* 브라우저 기본 여백 초기화 (이 부분을 파일 맨 위에 추가하세요!) */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* ArtLensIndex.css 맨 위 */
 html, body, #root {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #121418; /* 🌟 이 줄을 반드시 추가하세요! (바닥을 까맣게 만듦) */
+    background-color: #121418;
 }
 
 :root {
@@ -26,16 +22,14 @@ html, body, #root {
     --text-sub: #64748B;
 }
 
-/* React 컴포넌트 래퍼를 기준으로 100vh 확보 */
 .artlens-wrapper {
     height: 100vh;
     font-family: 'Pretendard', sans-serif;
-    overflow: hidden;
+    overflow: visible;
     background: #000;
     position: relative;
 }
 
-/* FULL SCREEN BACKGROUND HERO */
 .hero-container {
     position: relative;
     height: 100%;
@@ -51,7 +45,6 @@ html, body, #root {
     background-position: center;
 }
 
-/* GNB - Minimal */
 nav {
     position: absolute;
     top: 0;
@@ -63,10 +56,10 @@ nav {
     z-index: 10;
     box-sizing: border-box;
 }
+
 .logo { font-size: 20px; font-weight: 800; color: var(--white); display: flex; align-items: center; gap: 8px; text-decoration: none;}
 .logo-box { width: 32px; height: 32px; background: var(--sky); border-radius: 8px; }
 
-/* MAIN CONTENT */
 .hero-content { z-index: 5; max-width: 800px; }
 .hero-badge {
     display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.2);
@@ -76,7 +69,6 @@ nav {
 .hero-title { font-size: 56px; font-weight: 800; line-height: 1.2; margin-bottom: 20px; letter-spacing: -0.03em; }
 .hero-sub { font-size: 18px; opacity: 0.9; margin-bottom: 48px; font-weight: 300; }
 
-/* CORE ACTION BUTTONS */
 .cta-group { display: flex; gap: 16px; justify-content: center; }
 
 .btn {
@@ -155,3 +147,119 @@ nav {
 
 .modal-footer { margin-top: 24px; font-size: 14px; color: var(--text-sub); }
 .modal-footer a { color: var(--sky); font-weight: 600; text-decoration: none; }
+
+/* =========================================================
+   PROFILE & DROPDOWN STYLES
+========================================================= */
+.profile-menu-container {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--white);
+    font-family: inherit;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.profile-trigger:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.profile-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: #52B4D8;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.profile-name {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.dropdown-menu-index {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 220px;
+    background-color: #1F2125;
+    border: 1px solid #33363D;
+    border-radius: 16px;
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    z-index: 20;
+    animation: fadeInDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    color: #E2E8F0;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.dropdown-item svg {
+    color: #94A3B8;
+    transition: color 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: #FFFFFF;
+}
+
+.dropdown-item:hover svg {
+    color: #FFFFFF;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #33363D;
+    margin: 4px 0;
+}
+
+.dropdown-item.logout-item {
+    color: #FF6B6B;
+}
+
+.dropdown-item.logout-item svg {
+    color: #FF6B6B;
+}
+
+.dropdown-item.logout-item:hover {
+    background-color: rgba(255, 107, 107, 0.08);
+}
