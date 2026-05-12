@@ -1,0 +1,157 @@
+/* ArtLensIndex.css */
+
+/* 브라우저 기본 여백 초기화 (이 부분을 파일 맨 위에 추가하세요!) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ArtLensIndex.css 맨 위 */
+html, body, #root {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #121418; /* 🌟 이 줄을 반드시 추가하세요! (바닥을 까맣게 만듦) */
+}
+
+:root {
+    --sky: #4AADDF;
+    --sky-dark: #2E8FBF;
+    --sky-light: #EAF6FC;
+    --white: #FFFFFF;
+    --text-main: #1E293B;
+    --text-sub: #64748B;
+}
+
+/* React 컴포넌트 래퍼를 기준으로 100vh 확보 */
+.artlens-wrapper {
+    height: 100vh;
+    font-family: 'Pretendard', sans-serif;
+    overflow: hidden;
+    background: #000;
+    position: relative;
+}
+
+/* FULL SCREEN BACKGROUND HERO */
+.hero-container {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: var(--white);
+    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
+    url('https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=1600&q=80');
+    background-size: cover;
+    background-position: center;
+}
+
+/* GNB - Minimal */
+nav {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    z-index: 10;
+    box-sizing: border-box;
+}
+.logo { font-size: 20px; font-weight: 800; color: var(--white); display: flex; align-items: center; gap: 8px; text-decoration: none;}
+.logo-box { width: 32px; height: 32px; background: var(--sky); border-radius: 8px; }
+
+/* MAIN CONTENT */
+.hero-content { z-index: 5; max-width: 800px; }
+.hero-badge {
+    display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(5px); border-radius: 100px; font-size: 14px; margin-bottom: 24px;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+.hero-title { font-size: 56px; font-weight: 800; line-height: 1.2; margin-bottom: 20px; letter-spacing: -0.03em; }
+.hero-sub { font-size: 18px; opacity: 0.9; margin-bottom: 48px; font-weight: 300; }
+
+/* CORE ACTION BUTTONS */
+.cta-group { display: flex; gap: 16px; justify-content: center; }
+
+.btn {
+    padding: 20px 48px; font-size: 18px; font-weight: 700; border-radius: 14px;
+    cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none; border: none; display: flex; align-items: center; gap: 10px;
+}
+
+.btn-analyze { background: var(--sky); color: var(--white); box-shadow: 0 10px 30px rgba(74, 173, 223, 0.4); }
+.btn-analyze:hover { background: var(--sky-dark); transform: translateY(-5px); box-shadow: 0 15px 40px rgba(74, 173, 223, 0.6); }
+
+.btn-explore { background: rgba(255, 255, 255, 0.1); color: var(--white); border: 1px solid rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px); }
+.btn-explore:hover { background: rgba(255, 255, 255, 0.2); border-color: var(--white); transform: translateY(-5px); }
+
+.scroll-indicator { position: absolute; bottom: 30px; opacity: 0.6; font-size: 12px; letter-spacing: 2px; }
+
+/* MODAL STYLES */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+    opacity: 0; visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1; visibility: visible;
+}
+
+.modal-content {
+    background: #ffffff;
+    width: 100%; max-width: 480px;
+    border-radius: 24px;
+    padding: 50px 40px;
+    text-align: center;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    color: var(--text-main);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+    box-sizing: border-box;
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0);
+}
+
+.btn-close {
+    position: absolute; top: 20px; right: 20px;
+    background: none; border: none;
+    font-size: 24px; color: #94A3B8; cursor: pointer;
+    transition: color 0.2s;
+}
+.btn-close:hover { color: #1E293B; }
+
+.modal-icon {
+    font-size: 48px; display: block; margin-bottom: 20px;
+}
+
+.modal-title { font-size: 28px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.02em;}
+.modal-sub { font-size: 16px; color: var(--text-sub); margin-bottom: 40px; line-height: 1.5;}
+
+.btn-modal-login {
+    display: inline-flex; justify-content: center; align-items: center; gap: 8px;
+    width: 100%; padding: 18px;
+    background: var(--sky); color: #fff;
+    border: none; border-radius: 12px;
+    font-size: 18px; font-weight: 700;
+    cursor: pointer; text-decoration: none;
+    transition: 0.2s;
+    box-sizing: border-box;
+}
+.btn-modal-login:hover { background: var(--sky-dark); transform: translateY(-1px); }
+
+.modal-footer { margin-top: 24px; font-size: 14px; color: var(--text-sub); }
+.modal-footer a { color: var(--sky); font-weight: 600; text-decoration: none; }
