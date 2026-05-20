@@ -8,6 +8,15 @@ MONGO_URI: mongodb://poly:1234@192.168.175.128:27017/myMongo
 
 
 # =========================
+# Redis Settings
+# =========================
+REDIS_HOST: 192.168.175.128
+REDIS_PORT: 6379
+REDIS_USERNAME: poly
+REDIS_PASSWORD: 1234
+
+
+# =========================
 # SMTP (Naver)
 # =========================
 MAIL_HOST: smtp.naver.com
