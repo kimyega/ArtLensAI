@@ -104,7 +104,7 @@ public class UserService implements IUserService {
         String encPassword = EncryptUtil.encHashSHA256(newPassword);
 
         // 🔥 엔티티 수정 (JPA dirty checking)
-        entity.setPassword(encPassword);
+        entity.changePassword(encPassword);
 
         userRepository.save(entity);
 

@@ -59,10 +59,11 @@ const Login = () => {
                 { withCredentials: true }
             );
 
-            const { result, token, msg } = response.data;
+            const { result, token, refreshToken, msg } = response.data;
 
             if (result === 1 && token) {
                 localStorage.setItem('token', token);
+                localStorage.setItem('refreshToken', refreshToken);
                 navigate('/');
             } else {
                 // 🔥 서버 메시지 표시 (예: 가입되지 않은 이메일)

@@ -8,6 +8,7 @@ import kopo.poly.artlensai.user.dto.MsgDTO;
 import kopo.poly.artlensai.user.dto.UserDTO;
 import kopo.poly.artlensai.user.service.IUserService;
 import kopo.poly.artlensai.user.service.impl.MailService;
+import kopo.poly.artlensai.user.service.impl.RedisTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class UserController {
     private final IUserService userService;
     private final JwtUtil jwtUtil;
     private final MailService mailService;
+    private final RedisTokenService redisTokenService;
 
     @PostMapping("/login")
     public MsgDTO login(@RequestBody UserDTO pDTO) throws Exception {
@@ -33,17 +35,25 @@ public class UserController {
 
         if (userOpt.isPresent()) {
             String token = jwtUtil.generateAccessToken(userOpt.get().email());
+            String refreshToken = jwtUtil.generateRefreshToken(userOpt.get().email());
+
+            redisTokenService.saveRefreshToken(
+                    userOpt.get().email(),
+                    refreshToken
+            );
 
             return MsgDTO.builder()
                     .result(1)
                     .msg("로그인 성공")
                     .token(token)
+                    .refreshToken(refreshToken)
                     .build();
         } else {
             return MsgDTO.builder()
                     .result(0)
                     .msg("이메일 또는 비밀번호가 일치하지 않습니다.")
                     .token(null)
+                    .refreshToken(null)
                     .build();
         }
     }
@@ -246,6 +256,52 @@ public class UserController {
         return MsgDTO.builder()
                 .result(1)
                 .msg("VALID_TOKEN")
+                .build();
+    }
+
+    @PostMapping("/refresh")
+    public MsgDTO refresh(
+            @RequestBody Map<String, String> req
+    ) {
+
+        String refreshToken =
+                req.get("refreshToken");
+
+        // 1. refreshToken 검증
+        if (!jwtUtil.isTokenValid(refreshToken)) {
+
+            return MsgDTO.builder()
+                    .result(0)
+                    .msg("INVALID_REFRESH_TOKEN")
+                    .build();
+        }
+
+        // 2. 이메일 추출
+        String email =
+                jwtUtil.getEmailFromToken(refreshToken);
+
+        // 3. Redis 저장값 조회
+        String savedToken =
+                redisTokenService.getRefreshToken(email);
+
+        // 4. Redis 비교
+        if (savedToken == null ||
+                !savedToken.equals(refreshToken)) {
+
+            return MsgDTO.builder()
+                    .result(0)
+                    .msg("INVALID_REFRESH_TOKEN")
+                    .build();
+        }
+
+        // 5. 새 AccessToken 발급
+        String newAccessToken =
+                jwtUtil.generateAccessToken(email);
+
+        return MsgDTO.builder()
+                .result(1)
+                .msg("SUCCESS")
+                .token(newAccessToken)
                 .build();
     }
 

@@ -9,7 +9,6 @@ import org.hibernate.annotations.DynamicUpdate;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -39,5 +38,14 @@ public class UserEntity {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    public void changePassword(String password) {
+
+        if (password.length() < 8) {
+            throw new IllegalArgumentException();
+        }
+
+        this.password = password;
+    }
 
 }
