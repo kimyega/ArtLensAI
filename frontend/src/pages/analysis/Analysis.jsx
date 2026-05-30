@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Analysis.css';
+import axiosInstance from "../../api/axiosInstance.js";
 
 const Analysis = () => {
     const [previewSrc, setPreviewSrc] = useState(null);
@@ -69,58 +70,107 @@ const Analysis = () => {
 
     const handleUpload = async () => {
 
-        // 🔥 중복 클릭 방지
-        if (loading || isScanning) return;
+        if (loading || isScanning) {
+            return;
+        }
 
         if (!file) {
-            showToast("파일이 없습니다.");
+
+            showToast(
+                "파일이 없습니다."
+            );
+
             return;
         }
 
         try {
+
             setLoading(true);
-            setIsScanning(true); // 🔥 먼저 잠금 (중복 요청 차단)
+            setIsScanning(true);
 
-            const formData = new FormData();
-            formData.append("file", file);
+            const formData =
+                new FormData();
 
-            const res = await fetch("http://localhost:8080/analysis/upload", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                },
-                body: formData
-            });
+            formData.append(
+                "file",
+                file
+            );
 
-            const data = await res.json();
+            // =========================
+            // 업로드
+            // =========================
 
-            if (data.result !== 1) {
-                setIsScanning(false);
-                showToast("업로드 실패");
-                return;
+            const uploadRes =
+                await axiosInstance.post(
+                    "/analysis/v1/upload",
+                    formData
+                );
+
+            const uploadData =
+                uploadRes.data.data;
+
+            if (
+                uploadData.result !== 1
+            ) {
+
+                throw new Error(
+                    uploadData.msg
+                );
             }
 
-            const uploadId = data.dto;
+            const uploadId =
+                uploadData.dto;
 
-            console.log("uploadId:", uploadId);
+            console.log(
+                "uploadId:",
+                uploadId
+            );
 
-            const aiRes = await fetch("http://localhost:8080/analysis/start", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                },
-                body: JSON.stringify({ uploadId })
-            });
+            // =========================
+            // 분석 시작
+            // =========================
 
-            const aiData = await aiRes.json();
-            console.log("AI 분석 결과:", aiData);
+            const analysisRes =
+                await axiosInstance.post(
 
-        } catch (err) {
-            console.error(err);
-            showToast("분석 요청 실패");
+                    "/analysis/v1/start",
+
+                    {
+                        uploadId
+                    }
+                );
+
+            const analysisData =
+                analysisRes.data.data;
+
+            console.log(
+                "analysisData:",
+                analysisData
+            );
+
+            const resultId =
+                analysisData.dto.resultId;
+
+            console.log(
+                "resultId:",
+                resultId
+            );
+
+            window.location.href =
+                `/analysis/result/${resultId}`;
+
+        } catch (e) {
+
+            console.error(e);
+
+            showToast(
+                "분석 요청 실패"
+            );
+
             setIsScanning(false);
+
         } finally {
+
             setLoading(false);
         }
     };
