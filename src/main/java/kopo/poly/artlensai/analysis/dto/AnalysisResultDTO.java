@@ -4,10 +4,18 @@ import lombok.Builder;
 
 import java.util.List;
 
-@Builder
+@Builder(toBuilder = true)
 public record AnalysisResultDTO (
         Integer result,
+
+        List<PaletteDTO> palette,
+
+        List<TagResultDTO> tags,
+
         List<ArtistResultDTO> top5,
-        List<String> tags
+
+        String title,
+
+        String comment
 ) {
 }
