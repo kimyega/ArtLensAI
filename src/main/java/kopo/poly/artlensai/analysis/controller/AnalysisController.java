@@ -1,7 +1,7 @@
 package kopo.poly.artlensai.analysis.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import kopo.poly.artlensai.analysis.dto.AnalysisDTO;
-import kopo.poly.artlensai.analysis.dto.AnalysisResultDTO;
 import kopo.poly.artlensai.analysis.dto.AnalysisStartResponseDTO;
 import kopo.poly.artlensai.analysis.dto.MsgDTO;
 import kopo.poly.artlensai.analysis.service.impl.AnalysisService;
@@ -10,8 +10,7 @@ import kopo.poly.artlensai.user.dto.UserDTO;
 import kopo.poly.artlensai.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +18,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 @RestController
 @RequestMapping("/analysis/v1")
@@ -31,6 +31,11 @@ public class AnalysisController {
 
     private final IUserService userService;
     private final AnalysisService analysisService;
+
+    private final S3Client s3Client;
+
+    @Value("${ncp.bucket}")
+    private String bucket;
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadImage(
@@ -185,25 +190,45 @@ public class AnalysisController {
         );
     }
 
-    @GetMapping("/api/image/{imgKey}")
-    public ResponseEntity<Resource> getImage(
-            @PathVariable String imgKey
-    ) throws Exception {
+    @GetMapping("/api/image/**")
+    public ResponseEntity<byte[]> getImage(
+            HttpServletRequest request
+    ) {
 
-        Path path = Paths.get(
-                "C:/Users/kimye/Desktop/개인프로젝트/2차 평가/upload_img/"
-                        + imgKey
-        );
+        try {
 
-        Resource resource =
-                new UrlResource(
-                        path.toUri()
-                );
+            String key =
+                    request.getRequestURI()
+                            .replace(
+                                    "/analysis/v1/api/image/",
+                                    ""
+                            );
 
-        return ResponseEntity.ok()
-                .contentType(
-                        MediaType.IMAGE_JPEG
-                )
-                .body(resource);
+            ResponseBytes<GetObjectResponse> obj =
+                    s3Client.getObjectAsBytes(
+
+                            GetObjectRequest.builder()
+                                    .bucket(bucket)
+                                    .key(key)
+                                    .build()
+                    );
+
+            return ResponseEntity.ok()
+                    .contentType(
+                            MediaType.IMAGE_JPEG
+                    )
+                    .body(
+                            obj.asByteArray()
+                    );
+
+        } catch (Exception e) {
+
+            log.error(
+                    "image load fail",
+                    e
+            );
+
+            return ResponseEntity.notFound().build();
+        }
     }
 }
