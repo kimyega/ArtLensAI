@@ -20,6 +20,8 @@ import {
     useState
 } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 import axiosInstance
     from '../../api/axiosInstance.js';
 
@@ -98,6 +100,8 @@ const AnalysisResultPage = () => {
                     await axiosInstance.get(
                         `/analysis/v1/result/${resultId}`
                     );
+
+                console.log("RESULT API =", res.data);
 
                 setResult(res.data);
 
@@ -197,6 +201,7 @@ const AnalysisResultPage = () => {
 
                         <button
                             className="analysis-btn analysis-btn-primary"
+                            onClick={() => navigate('/style-map', { state: { incomingResult: result } })}
                         >
 
                             <Compass size={16} />
@@ -215,7 +220,7 @@ const AnalysisResultPage = () => {
                     <div className="analysis-hero-image-wrap">
 
                         <img
-                            src={`http://localhost:8080/analysis/v1/api/image/${result.imgKey}`}
+                            src={`${API_URL}/analysis/v1/api/image/${result.imgKey}`}
                             alt="uploaded"
                             className="analysis-hero-image"
                         />
@@ -360,46 +365,52 @@ const AnalysisResultPage = () => {
 
                     <div className="analysis-artists-scroll">
 
-                        {result.top5?.map((artist, idx) => (
+                        {result.top5?.map((artist, idx) => {
 
-                            <div
-                                key={idx}
-                                className="analysis-artist-modern-card"
-                            >
+                            const path = artist.profileImg?.replace(
+                                "https://kr.ncloudstorage.com/artlens-bucket/",
+                                ""
+                            );
 
-                                <img
-                                    src={`http://localhost:8080/artist/v1/profile/image?path=${
-                                        artist.profileImg?.trim().replace(/\\/g, "/")
-                                    }`}
-                                    alt={artist.artistName}
-                                    className="analysis-artist-modern-image"
-                                    onError={(e) => {
-                                        console.log("실패 URL =", e.target.src);
-                                    }}
-                                />
+                            return (
 
-                                <div className="analysis-artist-modern-info">
+                                <div
+                                    key={idx}
+                                    className="analysis-artist-modern-card"
+                                >
 
-                                    <div className="analysis-artist-modern-rate">
+                                    <img
+                                        src={`${API_URL}/analysis/v1/api/image/${path}`}
+                                        alt={artist.artistName}
+                                        className="analysis-artist-modern-image"
+                                        onError={(e) => {
+                                            console.log("실패 URL =", e.target.src);
+                                        }}
+                                    />
 
-                                        {Math.round(
-                                            artist.similarity * 100
-                                        )}%
+                                    <div className="analysis-artist-modern-info">
+
+                                        <div className="analysis-artist-modern-rate">
+
+                                            {Math.round(
+                                                artist.similarity * 100
+                                            )}%
+
+                                        </div>
+
+                                        <h3>
+                                            {artist.artistName}
+                                        </h3>
+
+                                        <p>
+                                            {artist.mainTag}
+                                        </p>
 
                                     </div>
 
-                                    <h3>
-                                        {artist.artistName}
-                                    </h3>
-
-                                    <p>
-                                        {artist.mainTag}
-                                    </p>
-
                                 </div>
-
-                            </div>
-                        ))}
+                            );
+                        })}
 
                     </div>
 
