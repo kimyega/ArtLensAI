@@ -6,6 +6,7 @@ import java.util.List;
 
 @Builder(toBuilder = true)
 public record AnalysisResultDTO (
+
         Integer result,
 
         List<PaletteDTO> palette,
@@ -14,8 +15,11 @@ public record AnalysisResultDTO (
 
         List<ArtistResultDTO> top5,
 
+        StyleMapDTO styleMap,
+
         String title,
 
         String comment
+
 ) {
 }
