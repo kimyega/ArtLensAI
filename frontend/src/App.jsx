@@ -5,11 +5,16 @@ import ArtLensIndex from './pages/artLensIndex/ArtLensIndex.jsx';
 import Login from './pages/login/Login.jsx';
 import Signup from "./pages/signup/Signup.jsx";
 import FindPw from "./pages/findPw/FindPw.jsx";
-import ResetPw from './pages/resetPw/ResetPassword.jsx'
-import ResetSuccess from './pages/resetSuc/ResetSuccess.jsx'
-import ResetExpired from './pages/resetExp/ResetExpired.jsx'
+import ResetPw from './pages/reset/resetPw/ResetPassword.jsx'
+import ResetSuccess from './pages/reset/resetSuc/ResetSuccess.jsx'
+import ResetExpired from './pages/reset/resetExp/ResetExpired.jsx'
 import Header from './components/layout/Header';
 import Analysis from './pages/analysis/Analysis.jsx'
+import AnalysisResult from "./pages/analysis/AnalysisResult.jsx";
+import ArtistExplore from "./pages/artists/ArtistExplore.jsx";
+import StyleMap from "./pages/styleMap/StyleMap.jsx";
+import History from "./pages/history/AnalysisHistory.jsx"
+import MyPage from "./pages/mypage/MyPage.jsx";
 
 // 🌟 주소 변화를 감지해서 애니메이션을 실행해주는 내부 컴포넌트
 function AnimatedRoutes() {
@@ -31,7 +36,17 @@ function AnimatedRoutes() {
                 <Route path="/reset-suc" element={<ResetSuccess />} />
                 <Route path="/reset-exp" element={<ResetExpired />} />
                 <Route path="/analysis" element={<Analysis />} />
-
+                <Route
+                    path="/analysis/result/:resultId"
+                    element={<AnalysisResult />}
+                />
+                <Route
+                    path="/artist"
+                    element={<ArtistExplore />}
+                />
+                <Route path="/style-map" element={<StyleMap/>} />
+                <Route path="/history" element={<History/>} />
+                <Route path="/mypage" element={<MyPage/>} />
             </Routes>
         </>
     );
