@@ -1,0 +1,527 @@
+/* ArtistExplore.css */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+:root {
+    --artist-explore-sky: #4aaddf;
+    --artist-explore-sky-dark: #2e8fbf;
+    --artist-explore-bg-dark: #1e222a;
+    --artist-explore-bg-panel: rgba(40, 45, 56, 0.5);
+    --artist-explore-text-sub: #a0abba;
+    --artist-explore-border: rgba(255, 255, 255, 0.08);
+}
+
+.artist-explore-page * {
+    box-sizing: border-box;
+}
+
+.artist-explore-page {
+    min-height: 100vh;
+    background: var(--artist-explore-bg-dark);
+    color: white;
+    overflow-x: hidden;
+    font-family: 'Pretendard',
+    sans-serif;
+}
+
+.artist-explore-bg-container {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+}
+
+.artist-explore-bg-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.5;
+    animation: artistExplorePulse
+    15s infinite alternate;
+}
+
+.artist-explore-glow-1 {
+    top: -10%;
+    left: 10%;
+    width: 50vw;
+    height: 50vw;
+    background: rgba(
+            74,
+            173,
+            223,
+            0.2
+    );
+}
+
+.artist-explore-glow-2 {
+    bottom: -20%;
+    right: -10%;
+    width: 60vw;
+    height: 60vw;
+    background: rgba(
+            138,
+            74,
+            223,
+            0.1
+    );
+}
+
+@keyframes artistExplorePulse {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.15);
+    }
+}
+
+.artist-explore-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 120px 40px 60px;
+}
+
+.artist-explore-page-header {
+    margin-bottom: 40px;
+}
+
+.artist-explore-header-title h1 {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.artist-explore-header-title p {
+    color: var(
+            --artist-explore-text-sub
+    );
+    line-height: 1.6;
+}
+
+.artist-explore-search-filter-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.artist-explore-search-box {
+    position: relative;
+    max-width: 500px;
+}
+
+.artist-explore-search-input {
+    width: 100%;
+    padding: 16px 20px 16px
+    48px;
+    border-radius: 16px;
+    border: 1px solid
+    var(
+            --artist-explore-border
+    );
+    background: rgba(
+            0,
+            0,
+            0,
+            0.3
+    );
+    color: white;
+    outline: none;
+    font-size: 15px;
+}
+
+.artist-explore-search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(
+            --artist-explore-text-sub
+    );
+}
+
+.artist-explore-filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.artist-explore-filter-tag {
+
+    padding: 10px 14px;
+
+    border-radius: 12px;
+
+    background:
+            rgba(255,255,255,0.04);
+
+    border:
+            1px solid rgba(255,255,255,0.06);
+
+    color:
+            rgba(255,255,255,0.72);
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+
+    font-size: 13px;
+
+    font-weight: 500;
+}
+
+.artist-explore-filter-tag.active {
+
+    background:
+            linear-gradient(
+                    135deg,
+                    rgba(74,173,223,0.22),
+                    rgba(108,92,231,0.22)
+            );
+
+    border-color:
+            rgba(74,173,223,0.5);
+
+    color: white;
+
+    box-shadow:
+            0 0 18px rgba(74,173,223,0.18);
+}
+
+.artist-explore-filter-groups {
+    gap: 14px;
+}
+
+.artist-explore-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(280px, 1fr)
+    );
+    gap: 24px;
+}
+
+.artist-explore-card {
+    background: var(
+            --artist-explore-bg-panel
+    );
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid
+    var(
+            --artist-explore-border
+    );
+    backdrop-filter: blur(20px);
+    transition: 0.35s;
+    cursor: pointer;
+}
+
+.artist-explore-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(
+            74,
+            173,
+            223,
+            0.4
+    );
+    box-shadow: 0 20px 50px
+    rgba(0, 0, 0, 0.45);
+}
+
+.artist-explore-card-cover {
+    height: 240px;
+    overflow: hidden;
+}
+
+.artist-explore-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    transition: 0.35s;
+}
+
+.artist-explore-card:hover
+.artist-explore-cover-img {
+    transform: scale(1.06);
+}
+
+.artist-explore-card-body {
+    padding: 20px;
+}
+
+.artist-explore-artist-header {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.artist-explore-avatar,
+.artist-explore-modal-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.artist-explore-name-short {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.artist-explore-post-count {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(
+            --artist-explore-text-sub
+    );
+    font-size: 12px;
+}
+
+.artist-explore-card-tags,
+.artist-explore-modal-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.artist-explore-tag {
+    padding: 5px 10px;
+    border-radius: 8px;
+    background: rgba(
+            255,
+            255,
+            255,
+            0.06
+    );
+    font-size: 12px;
+}
+
+.artist-explore-card-action {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid
+    rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+}
+
+.artist-explore-action-text {
+    color: var(
+            --artist-explore-text-sub
+    );
+}
+
+.artist-explore-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(
+            18,
+            20,
+            26,
+            0.75
+    );
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.35s;
+}
+
+.artist-explore-modal {
+    position: relative;
+    z-index: 100000;
+    width: 90%;
+    max-width: 600px;
+    background: rgba(
+            30,
+            34,
+            42,
+            0.95
+    );
+    border-radius: 24px;
+    overflow: hidden;
+    transform: translateY(20px)
+    scale(0.95);
+    transition: 0.35s;
+}
+
+.artist-explore-modal-close {
+    z-index: 100001;
+}
+
+.artist-explore-modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+
+
+.artist-explore-modal-overlay.show
+.artist-explore-modal {
+    transform: translateY(0)
+    scale(1);
+}
+
+.artist-explore-modal-cover {
+    width: 100%;
+    height: 420px;
+    object-fit: cover;
+    object-position: top;
+}
+
+.artist-explore-modal-body {
+    padding: 32px;
+}
+
+.artist-explore-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(
+            0,
+            0,
+            0,
+            0.5
+    );
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.artist-explore-modal-header-info {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    margin-top: -64px;
+    margin-bottom: 24px;
+}
+
+.artist-explore-modal-name {
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.artist-explore-modal-post-count {
+    color: var(
+            --artist-explore-sky
+    );
+}
+
+.artist-explore-modal-section {
+    margin-bottom: 24px;
+}
+
+.artist-explore-modal-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+.artist-explore-modal-desc {
+    padding: 16px;
+    border-radius: 14px;
+    line-height: 1.7;
+    background: rgba(
+            0,
+            0,
+            0,
+            0.2
+    );
+}
+
+.artist-explore-modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.artist-explore-btn {
+    flex: 1;
+    border: none;
+    padding: 14px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.artist-explore-btn-outline {
+    background: rgba(
+            255,
+            255,
+            255,
+            0.05
+    );
+    color: white;
+}
+
+.artist-explore-btn-primary {
+    background: var(
+            --artist-explore-sky
+    );
+    color: white;
+}
+
+
+.artist-explore-filter-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.artist-explore-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    padding: 18px 20px;
+
+    border-radius: 20px;
+
+    background: rgba(255,255,255,0.03);
+
+    border: 1px solid rgba(255,255,255,0.06);
+
+    backdrop-filter: blur(12px);
+
+    transition: 0.25s;
+}
+
+.artist-explore-filter-group:hover {
+    border-color: rgba(74,173,223,0.25);
+}
+
+.artist-explore-filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    cursor: pointer;
+}
+
+.artist-explore-filter-category {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: white;
+}
+
+.artist-explore-filter-tag:hover {
+    border-color: rgba(74,173,223,0.5);
+    color: white;
+}
