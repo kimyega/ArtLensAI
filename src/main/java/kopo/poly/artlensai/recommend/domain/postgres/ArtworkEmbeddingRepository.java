@@ -1,0 +1,61 @@
+package kopo.poly.artlensai.recommend.domain.postgres;
+
+import kopo.poly.artlensai.recommend.domain.postgres.entity.ArtworkEmbeddingEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.Collection;
+import java.util.List;
+
+public interface ArtworkEmbeddingRepository
+        extends JpaRepository<ArtworkEmbeddingEntity, Long> {
+
+    List<ArtworkEmbeddingEntity> findByImgIdIn(Collection<Long> imgIds);
+
+    /**
+     * 클러스터별로 랜덤 이미지 1장씩 조회한다 (취향 테스트 초반 explore 문제용).
+     * excludeArtistIds는 비어있으면 안 됨(IN () 문법 에러) — 제외할 작가가 없으면
+     * 호출 측에서 더미 값(예: -1)을 하나 넣어서 호출해야 한다.
+     */
+    @Query(value = """
+            SELECT DISTINCT ON (ac.cluster_label)
+                   aw.img_id AS imgId,
+                   aw.artist_id AS artistId,
+                   ai.img_url AS imgUrl
+            FROM artwork_embeddings aw
+            JOIN artist_coords ac ON ac.artist_id = aw.artist_id
+            JOIN artist_images ai ON ai.img_id = aw.img_id
+            WHERE aw.artist_id NOT IN (:excludeArtistIds)
+            ORDER BY ac.cluster_label, random()
+            """, nativeQuery = true)
+    List<ArtworkCandidateRow> findRandomPerCluster(
+            @Param("excludeArtistIds") List<Long> excludeArtistIds
+    );
+
+    /**
+     * 주어진 벡터(vec)와 가장 가까운 이미지를 작가당 1장씩 조회한다
+     * (취향 테스트 후반 exploit 문제용). excludeArtistIds 더미값 규칙은 위와 동일.
+     */
+    @Query(value = """
+            SELECT sub.img_id AS imgId, sub.artist_id AS artistId, sub.img_url AS imgUrl
+            FROM (
+                SELECT DISTINCT ON (aw.artist_id)
+                       aw.img_id AS img_id,
+                       aw.artist_id AS artist_id,
+                       ai.img_url AS img_url,
+                       aw.embd_vect <=> CAST(:vec AS vector) AS distance
+                FROM artwork_embeddings aw
+                JOIN artist_images ai ON ai.img_id = aw.img_id
+                WHERE aw.artist_id NOT IN (:excludeArtistIds)
+                ORDER BY aw.artist_id, aw.embd_vect <=> CAST(:vec AS vector)
+            ) sub
+            ORDER BY sub.distance
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<ArtworkCandidateRow> findNearestDistinctArtistArtworks(
+            @Param("vec") String vec,
+            @Param("excludeArtistIds") List<Long> excludeArtistIds,
+            @Param("limit") int limit
+    );
+}
