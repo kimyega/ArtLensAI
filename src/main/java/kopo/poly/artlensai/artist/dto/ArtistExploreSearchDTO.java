@@ -16,7 +16,9 @@ public record ArtistExploreSearchDTO (
 
         List<String> composition,
 
-        List<String> mood
+        List<String> mood,
+
+        List<Long> artistIds
 
 ) {
 }

@@ -47,6 +47,7 @@ public class ArtistExploreService
                     addTagFilter(b, pDTO.mood());
 
                     addArtistNameFilter(b, pDTO.artistName());
+                    addArtistIdFilter(b, pDTO.artistIds());
 
                     return b;
                 }));
@@ -141,6 +142,27 @@ public class ArtistExploreService
                 .field("artistName.raw")
                 .terms(tv -> tv.value(
                         artistNames.stream()
+                                .map(FieldValue::of)
+                                .toList()
+                ))
+        ));
+    }
+
+    private void addArtistIdFilter(
+            BoolQuery.Builder b,
+            List<Long> artistIds
+    ) {
+
+        if (artistIds == null ||
+                artistIds.isEmpty()) {
+
+            return;
+        }
+
+        b.must(m -> m.terms(t -> t
+                .field("artistId")
+                .terms(tv -> tv.value(
+                        artistIds.stream()
                                 .map(FieldValue::of)
                                 .toList()
                 ))

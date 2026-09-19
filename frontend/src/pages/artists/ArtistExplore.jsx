@@ -8,9 +8,11 @@ import {
     X,
     MessageSquare,
     Hash,
-    Map,
+    Map as MapIcon,
     ExternalLink,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Heart,
+    TrendingUp
 } from 'lucide-react';
 
 import {
@@ -21,6 +23,7 @@ import {
 import axiosInstance from "../../api/axiosInstance.js";
 
 import {FILTERS} from "../../components/data/FilterTags.js";
+import ArtistLikeButton from "../../components/artists/ArtistLikeButton.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL;
 import { useNavigate } from "react-router-dom";
@@ -84,6 +87,21 @@ const ArtistExplore = () => {
     const [selectedArtistNames, setSelectedArtistNames] =
         useState([]);
 
+    // =========================
+    // 탭 / 찜 / 추천
+    // =========================
+    const [activeTab, setActiveTab] =
+        useState('ALL'); // 'ALL' | 'LIKED' | 'RECOMMEND'
+
+    const [likedArtistIds, setLikedArtistIds] =
+        useState(new Set());
+
+    const [recommendMeta, setRecommendMeta] =
+        useState({ source: null, byArtistId: new Map(), order: [] });
+
+    const [recommendLoaded, setRecommendLoaded] =
+        useState(false);
+
     const searchBoxRef = useRef(null);
 
     const navigate = useNavigate();
@@ -110,7 +128,82 @@ const ArtistExplore = () => {
 
     }, [selectedArtist]);
 
+    // =========================
+    // 찜한 작가 목록 로드 (마운트 시 1회, 탭 배지 숫자/하트 상태 둘 다 여기서 파생)
+    // =========================
     useEffect(() => {
+
+        const loadLikedArtists = async () => {
+
+            try {
+
+                const res = await axiosInstance.get("/like/v1/artists");
+
+                setLikedArtistIds(
+                    new Set(res.data.artistIds)
+                );
+
+            } catch (e) {
+
+                console.error(e);
+            }
+        };
+
+        loadLikedArtists();
+
+    }, []);
+
+    // =========================
+    // 추천 작가 메타 로드 (추천 탭 첫 진입 시 지연 로드)
+    // =========================
+    useEffect(() => {
+
+        if (activeTab !== 'RECOMMEND' || recommendLoaded) {
+
+            return;
+        }
+
+        const loadRecommend = async () => {
+
+            try {
+
+                const res = await axiosInstance.get("/recommend/v1/artists");
+
+                const byArtistId = new Map(
+                    res.data.items.map(item => [item.artistId, item])
+                );
+
+                setRecommendMeta({
+                    source: res.data.source,
+                    byArtistId,
+                    order: res.data.items.map(item => item.artistId)
+                });
+
+                setRecommendLoaded(true);
+
+            } catch (e) {
+
+                console.error(e);
+            }
+        };
+
+        loadRecommend();
+
+    }, [activeTab, recommendLoaded]);
+
+    useEffect(() => {
+
+        if (activeTab === 'LIKED' && likedArtistIds.size === 0) {
+
+            setArtists([]);
+            return;
+        }
+
+        if (activeTab === 'RECOMMEND' && (!recommendLoaded || recommendMeta.order.length === 0)) {
+
+            setArtists([]);
+            return;
+        }
 
         const fetchArtists = async () => {
 
@@ -191,6 +284,24 @@ const ArtistExplore = () => {
                         );
                     });
 
+                // =========================
+                // 탭 범위 (찜한 작가 / 추천 작가로 범위 제한)
+                // =========================
+                if (activeTab === 'LIKED') {
+
+                    [...likedArtistIds].forEach(id => {
+
+                        params.append("artistIds", id);
+                    });
+
+                } else if (activeTab === 'RECOMMEND') {
+
+                    recommendMeta.order.forEach(id => {
+
+                        params.append("artistIds", id);
+                    });
+                }
+
                 const res =
                     await axiosInstance.get(
 
@@ -201,9 +312,21 @@ const ArtistExplore = () => {
                     res.data
                 );
 
-                setArtists(
-                    res.data
-                );
+                let list = res.data;
+
+                if (activeTab === 'RECOMMEND') {
+
+                    // ES 응답 순서는 유사도 순서를 보장하지 않으므로 추천 순서 기준으로 재정렬
+                    const rank = new Map(
+                        recommendMeta.order.map((id, i) => [id, i])
+                    );
+
+                    list = [...list].sort(
+                        (a, b) => rank.get(a.artistId) - rank.get(b.artistId)
+                    );
+                }
+
+                setArtists(list);
 
             } catch (e) {
 
@@ -214,9 +337,54 @@ const ArtistExplore = () => {
         fetchArtists();
 
     }, [
+        activeTab,
         JSON.stringify(selectedArtistNames),
-        JSON.stringify(selectedFilters)
+        JSON.stringify(selectedFilters),
+        likedArtistIds,
+        recommendLoaded,
+        recommendMeta
     ]);
+
+    const handleToggleLike = async (artistId, nextLiked) => {
+
+        setLikedArtistIds(prev => {
+
+            const next = new Set(prev);
+
+            nextLiked ? next.add(artistId) : next.delete(artistId);
+
+            return next;
+        });
+
+        try {
+
+            if (nextLiked) {
+
+                await axiosInstance.put(`/like/v1/artists/${artistId}`);
+
+            } else {
+
+                await axiosInstance.delete(`/like/v1/artists/${artistId}`);
+            }
+
+            // 찜이 바뀌면 추천 결과도 바뀌므로, 추천 탭 데이터를 다시 받아오게 함
+            setRecommendLoaded(false);
+
+        } catch (e) {
+
+            console.error(e);
+
+            // 실패 시 롤백
+            setLikedArtistIds(prev => {
+
+                const next = new Set(prev);
+
+                nextLiked ? next.delete(artistId) : next.add(artistId);
+
+                return next;
+            });
+        }
+    };
 
     const handleFilterClick = (
         category,
@@ -479,6 +647,29 @@ const ArtistExplore = () => {
 
                 </div>
 
+                {/* TABS */}
+                <div className="artist-explore-tabs">
+
+                    {[
+                        { key: 'ALL', label: '전체 작가' },
+                        { key: 'LIKED', label: `♥ 찜한 작가 ${likedArtistIds.size}` },
+                        { key: 'RECOMMEND', label: '✨ 나를 위한 추천' }
+                    ].map(tab => (
+
+                        <button
+                            key={tab.key}
+                            type="button"
+                            className={`artist-explore-tab ${
+                                activeTab === tab.key ? 'active' : ''
+                            }`}
+                            onClick={() => setActiveTab(tab.key)}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+
+                </div>
+
                 {/* SEARCH */}
                 <div className="artist-explore-search-filter-bar">
 
@@ -704,10 +895,32 @@ const ArtistExplore = () => {
 
                 </div>
 
+                {/* EMPTY STATES */}
+                {activeTab === 'LIKED' && likedArtistIds.size === 0 && (
+
+                    <div className="artist-explore-empty-state">
+                        아직 찜한 작가가 없어요. 카드의 하트를 눌러 작가를 찜해보세요.
+                    </div>
+                )}
+
+                {activeTab === 'RECOMMEND' && recommendLoaded && recommendMeta.source === 'POPULAR_FALLBACK' && (
+
+                    <div className="artist-explore-empty-state">
+                        작가를 찜하면 취향에 맞는 작가를 추천해 드려요. 지금은 인기 작가를 보여드릴게요.
+                    </div>
+                )}
+
                 {/* GRID */}
                 <div className="artist-explore-grid">
 
-                    {artists.map((artist) => (
+                    {artists.map((artist) => {
+
+                        const recommendInfo =
+                            activeTab === 'RECOMMEND'
+                                ? recommendMeta.byArtistId.get(artist.artistId)
+                                : null;
+
+                        return (
 
                         <div
                             key={artist.artistId}
@@ -725,6 +938,12 @@ const ArtistExplore = () => {
                                     src={`${API_URL}/analysis/v1/api/image/${getImagePath(artist.profileImg)}`}
                                     alt={artist.artistName}
                                     className="artist-explore-cover-img"
+                                />
+
+                                <ArtistLikeButton
+                                    artistId={artist.artistId}
+                                    liked={likedArtistIds.has(artist.artistId)}
+                                    onToggle={handleToggleLike}
                                 />
 
                             </div>
@@ -747,20 +966,37 @@ const ArtistExplore = () => {
 
                                         </h3>
 
-                                        <span className="artist-explore-post-count">
+                                        {recommendInfo?.fallback ? (
 
-                                            <ImageIcon
-                                                size={
-                                                    12
+                                            <span className="artist-explore-post-count fallback">
+                                                <TrendingUp size={12} />
+                                                인기 작가 · 작품 {recommendInfo.postCnt}개
+                                            </span>
+
+                                        ) : recommendInfo ? (
+
+                                            <span className="artist-explore-post-count recommend">
+                                                <Heart size={12} />
+                                                {recommendInfo.reasonArtistName}와 비슷해요 · {recommendInfo.similarityPercent}%
+                                            </span>
+
+                                        ) : (
+
+                                            <span className="artist-explore-post-count">
+
+                                                <ImageIcon
+                                                    size={
+                                                        12
+                                                    }
+                                                />
+
+                                                Safebooru{' '}
+                                                {
+                                                    artist.posts
                                                 }
-                                            />
 
-                                            Safebooru{' '}
-                                            {
-                                                artist.posts
-                                            }
-
-                                        </span>
+                                            </span>
+                                        )}
 
                                     </div>
 
@@ -806,7 +1042,8 @@ const ArtistExplore = () => {
                             </div>
 
                         </div>
-                    ))}
+                        );
+                    })}
 
                 </div>
 
@@ -963,7 +1200,7 @@ const ArtistExplore = () => {
                                         )
                                     }
                                 >
-                                    <Map size={18}/>
+                                    <MapIcon size={18}/>
                                     Style Map 위치 보기
                                 </button>
 
