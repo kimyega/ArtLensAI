@@ -3,7 +3,10 @@ package kopo.poly.artlensai.analysis.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import kopo.poly.artlensai.analysis.dto.AnalysisDTO;
 import kopo.poly.artlensai.analysis.dto.AnalysisStartResponseDTO;
+import kopo.poly.artlensai.analysis.dto.AnalysisUsageDTO;
 import kopo.poly.artlensai.analysis.dto.MsgDTO;
+import kopo.poly.artlensai.analysis.exception.AnalysisLimitExceededException;
+import kopo.poly.artlensai.analysis.service.IAnalysisUsageService;
 import kopo.poly.artlensai.analysis.service.impl.AnalysisService;
 import kopo.poly.artlensai.global.response.CommonResponse;
 import kopo.poly.artlensai.user.dto.UserDTO;
@@ -31,6 +34,7 @@ public class AnalysisController {
 
     private final IUserService userService;
     private final AnalysisService analysisService;
+    private final IAnalysisUsageService analysisUsageService;
 
     private final S3Client s3Client;
 
@@ -157,6 +161,25 @@ public class AnalysisController {
                     )
             );
 
+        } catch (AnalysisLimitExceededException e) {
+
+            log.info("analysis limit exceeded: {}", e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(
+                            CommonResponse.of(
+                                    HttpStatus.TOO_MANY_REQUESTS,
+                                    HttpStatus.TOO_MANY_REQUESTS
+                                            .series()
+                                            .name(),
+                                    MsgDTO.builder()
+                                            .result(0)
+                                            .msg(e.getMessage())
+                                            .dto(e.getUsage())
+                                            .build()
+                            )
+                    );
+
         } catch (Exception e) {
 
             log.error(
@@ -178,6 +201,34 @@ public class AnalysisController {
                             )
                     );
         }
+    }
+
+    @GetMapping("/usage")
+    public ResponseEntity<?> getUsage(
+
+            @AuthenticationPrincipal
+            Jwt jwt
+
+    ) {
+
+        if (jwt == null) {
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UserDTO user =
+                userService.getUserByEmail(jwt.getSubject());
+
+        AnalysisUsageDTO usage =
+                analysisUsageService.getUsage(user.userId());
+
+        return ResponseEntity.ok(
+                CommonResponse.of(
+                        HttpStatus.OK,
+                        HttpStatus.OK.series().name(),
+                        usage
+                )
+        );
     }
 
     @GetMapping("/result/{id}")

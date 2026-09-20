@@ -10,8 +10,29 @@ const Analysis = () => {
     const [statusText, setStatusText] = useState('');
     const [toast, setToast] = useState({ show: false, message: '' });
     const [loading, setLoading] = useState(false);
+    const [usage, setUsage] = useState(null); // { used, remaining, limit }
 
     const fileInputRef = useRef(null);
+
+    useEffect(() => {
+
+        const loadUsage = async () => {
+
+            try {
+
+                const res = await axiosInstance.get("/analysis/v1/usage");
+
+                setUsage(res.data.data);
+
+            } catch (e) {
+
+                console.error(e);
+            }
+        };
+
+        loadUsage();
+
+    }, []);
 
     const analysisSteps = [
         'ArtLens AI가 화풍 특징을 추출하고 있습니다...',
@@ -156,6 +177,19 @@ const Analysis = () => {
                 resultId
             );
 
+            setUsage({
+                used: analysisData.dto.dailyLimit - analysisData.dto.remaining,
+                remaining: analysisData.dto.remaining,
+                limit: analysisData.dto.dailyLimit
+            });
+
+            if (analysisData.dto.cached) {
+
+                showToast(
+                    "⚡ 이전에 분석한 이미지라 바로 보여드려요!"
+                );
+            }
+
             window.location.href =
                 `/analysis/result/${resultId}`;
 
@@ -163,9 +197,27 @@ const Analysis = () => {
 
             console.error(e);
 
-            showToast(
-                "분석 요청 실패"
-            );
+            if (e.response?.status === 429) {
+
+                showToast(
+                    e.response?.data?.data?.msg ??
+                        "오늘 분석 가능 횟수를 모두 사용했어요."
+                );
+
+                const exceededUsage =
+                    e.response?.data?.data?.dto;
+
+                if (exceededUsage) {
+
+                    setUsage(exceededUsage);
+                }
+
+            } else {
+
+                showToast(
+                    "분석 요청 실패"
+                );
+            }
 
             setIsScanning(false);
 
@@ -206,6 +258,12 @@ const Analysis = () => {
                         <div className="upload-header">
                             <h1>단 한 장의 이미지, <br /><span>ArtLens ai</span>가 당신의 화풍을 읽어냅니다</h1>
                             <p>정교한 시각 분석 엔진이 작품의 색감, 터치, 구도를 깊이 있게 파악합니다</p>
+
+                            {usage && (
+                                <p className="usage-remaining">
+                                    오늘 {usage.remaining}/{usage.limit}회 분석 가능
+                                </p>
+                            )}
                         </div>
 
                         <div className="upload-card">

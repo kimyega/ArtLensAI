@@ -7,7 +7,13 @@ public record AnalysisStartResponseDTO(
 
         Integer result,
 
-        String resultId
+        String resultId,
+
+        boolean cached,
+
+        Integer remaining,
+
+        Integer dailyLimit
 
 ) {
 }

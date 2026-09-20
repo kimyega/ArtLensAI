@@ -48,6 +48,10 @@ public class MongoService {
                                 image.getImgKey()
                         )
 
+                        .imgHash(
+                                image.getImgHash()
+                        )
+
                         .title(
                                 body.title()
                         )

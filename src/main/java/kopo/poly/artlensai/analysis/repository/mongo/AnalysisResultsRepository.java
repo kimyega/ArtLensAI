@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AnalysisResultsRepository
@@ -18,4 +19,6 @@ public interface AnalysisResultsRepository
     Long countByUserId(Long userId);
 
     List<AnalysisResultsDocument> findByUserId(Long userId);
+
+    Optional<AnalysisResultsDocument> findFirstByUserIdAndImgHashOrderByCreatedAtDesc(Long userId, String imgHash);
 }

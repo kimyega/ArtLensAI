@@ -61,6 +61,7 @@
 .upload-header h1 { font-size: 38px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.03em; color: #FFFFFF; line-height: 1.2; }
 .upload-header h1 span { color: #4AADDF; }
 .upload-header p { font-size: 16px; color: #A0ABBA; line-height: 1.6; }
+.usage-remaining { margin-top: 10px; font-size: 13px; font-weight: 600; color: #4AADDF; }
 
 /* 카드 스타일 */
 .upload-card {

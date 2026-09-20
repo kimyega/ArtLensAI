@@ -43,6 +43,9 @@ public class UploadImageEntity {
     @Column(name = "format")
     private String format;
 
+    @Column(name = "img_hash")
+    private String imgHash;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

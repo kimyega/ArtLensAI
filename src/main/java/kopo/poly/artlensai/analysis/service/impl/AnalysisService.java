@@ -4,12 +4,14 @@ import kopo.poly.artlensai.analysis.domain.postgres.entity.AnalysisHistoryEntity
 import kopo.poly.artlensai.analysis.domain.postgres.entity.UploadImageEntity;
 import kopo.poly.artlensai.analysis.dto.AnalysisResultDTO;
 import kopo.poly.artlensai.analysis.dto.AnalysisStartResponseDTO;
+import kopo.poly.artlensai.analysis.dto.AnalysisUsageDTO;
 import kopo.poly.artlensai.analysis.dto.TagResultDTO;
 import kopo.poly.artlensai.analysis.repository.mongo.AnalysisResultsRepository;
 import kopo.poly.artlensai.analysis.repository.mongo.document.AnalysisResultsDocument;
 import kopo.poly.artlensai.analysis.repository.postgres.AnalysisHistoryRepository;
 import kopo.poly.artlensai.analysis.repository.postgres.UploadImageRepository;
 import kopo.poly.artlensai.analysis.service.IAnalysisService;
+import kopo.poly.artlensai.analysis.service.IAnalysisUsageService;
 import kopo.poly.artlensai.artist.repository.mongo.ArtistStyleProfileRepository;
 import kopo.poly.artlensai.user.dto.UserDTO;
 import lombok.RequiredArgsConstructor;
@@ -24,13 +26,16 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -43,6 +48,7 @@ public class AnalysisService implements IAnalysisService {
     private final MongoService mongoService;
     private final AnalysisResultsRepository analysisResultsRepository;
     private final ArtistStyleProfileRepository artistStyleProfileRepository;
+    private final IAnalysisUsageService analysisUsageService;
     private final S3Client s3Client;
 
     @Value("${ncp.bucket}")
@@ -63,9 +69,17 @@ public class AnalysisService implements IAnalysisService {
             String objectKey =
                     "uploads/" + fileName;
 
+            // 캐시/중복분석 판별용 해시 + 가로세로 추출 + S3 업로드까지
+            // 전부 이 byte[] 하나로 처리(스트림을 여러 번 읽지 않도록)
+            byte[] bytes =
+                    file.getBytes();
+
+            String imgHash =
+                    sha256Hex(bytes);
+
             // 가로 세로 추출
             BufferedImage image =
-                    ImageIO.read(file.getInputStream());
+                    ImageIO.read(new ByteArrayInputStream(bytes));
 
             Integer width = null;
             Integer height = null;
@@ -85,15 +99,14 @@ public class AnalysisService implements IAnalysisService {
 
             s3Client.putObject(
                     request,
-                    RequestBody.fromBytes(
-                            file.getBytes()
-                    )
+                    RequestBody.fromBytes(bytes)
             );
 
             UploadImageEntity entity =
                     UploadImageEntity.builder()
                             .userId(pDTO.userId())
                             .imgKey(objectKey)
+                            .imgHash(imgHash)
                             .fileName(file.getOriginalFilename())
                             .fileSize(file.getSize())
                             .width(width)
@@ -128,6 +141,30 @@ public class AnalysisService implements IAnalysisService {
                         .orElseThrow(
                                 () -> new RuntimeException("이미지 없음")
                         );
+
+        // =============================
+        // 캐시 히트: 본인이 전에 분석한 같은 이미지(해시 동일)면
+        // FastAPI 재호출 없이 기존 결과를 그대로 재사용 (일일 한도도 소모하지 않음)
+        // =============================
+        if (image.getImgHash() != null) {
+
+            Optional<AnalysisResultsDocument> cached =
+                    analysisResultsRepository
+                            .findFirstByUserIdAndImgHashOrderByCreatedAtDesc(
+                                    userDTO.userId(),
+                                    image.getImgHash()
+                            );
+
+            if (cached.isPresent()) {
+
+                return reuseCachedResult(uploadId, userDTO, cached.get());
+            }
+        }
+
+        // =============================
+        // 일일 분석 한도 체크 (FastAPI 호출 "전"에 먼저 소모)
+        // =============================
+        analysisUsageService.consumeOrThrow(userDTO.userId());
 
         AnalysisHistoryEntity history =
                 AnalysisHistoryEntity.builder()
@@ -371,10 +408,16 @@ public class AnalysisService implements IAnalysisService {
                 // =============================
                 // 🔥 React 로 반환
                 // =============================
+                AnalysisUsageDTO usage =
+                        analysisUsageService.getUsage(userDTO.userId());
+
                 return AnalysisStartResponseDTO
                         .builder()
                         .result(1)
                         .resultId(mongoId)
+                        .cached(false)
+                        .remaining(usage.remaining())
+                        .dailyLimit(usage.limit())
                         .build();
 
             } else {
@@ -401,6 +444,63 @@ public class AnalysisService implements IAnalysisService {
                     "FastAPI 호출 실패",
                     e
             );
+        }
+    }
+
+    private AnalysisStartResponseDTO reuseCachedResult(
+            Long uploadId,
+            UserDTO userDTO,
+            AnalysisResultsDocument cachedDoc
+    ) {
+
+        historyRepository.save(
+                AnalysisHistoryEntity.builder()
+                        .userId(userDTO.userId())
+                        .uploadId(uploadId)
+                        .status("DONE")
+                        .processingTime(0f)
+                        .build()
+        );
+
+        log.info(
+                "⚡ 캐시 히트: uploadId={}, resultId={}",
+                uploadId,
+                cachedDoc.getId()
+        );
+
+        AnalysisUsageDTO usage =
+                analysisUsageService.getUsage(userDTO.userId());
+
+        return AnalysisStartResponseDTO
+                .builder()
+                .result(1)
+                .resultId(cachedDoc.getId())
+                .cached(true)
+                .remaining(usage.remaining())
+                .dailyLimit(usage.limit())
+                .build();
+    }
+
+    private String sha256Hex(byte[] bytes) {
+
+        try {
+
+            byte[] digest =
+                    MessageDigest.getInstance("SHA-256")
+                            .digest(bytes);
+
+            StringBuilder sb = new StringBuilder();
+
+            for (byte b : digest) {
+
+                sb.append(String.format("%02x", b));
+            }
+
+            return sb.toString();
+
+        } catch (Exception e) {
+
+            throw new RuntimeException("이미지 해시 계산 실패", e);
         }
     }
 

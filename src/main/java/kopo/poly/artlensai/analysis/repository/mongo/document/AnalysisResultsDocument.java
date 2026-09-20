@@ -30,6 +30,8 @@ public class AnalysisResultsDocument {
 
     private String imgKey;
 
+    private String imgHash;
+
     private String title;
 
     private String comment;
