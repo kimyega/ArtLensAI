@@ -135,7 +135,7 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/analysis/v1/result/**",
-                                "/analysis/v1/image/**"
+                                "/analysis/v1/api/image/**"
                         ).permitAll()
 
                         .requestMatchers(
