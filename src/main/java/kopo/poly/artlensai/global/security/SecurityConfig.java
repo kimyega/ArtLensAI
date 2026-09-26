@@ -144,6 +144,18 @@ public class SecurityConfig {
                                 "/reg/v1/**"
                         ).permitAll()
 
+                        // 공유 링크: 내 공유 조회(/mine, /mine/batch)는 로그인 필요, 그 외 GET /share/v1/{token}은 공개
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/share/v1/mine",
+                                "/share/v1/mine/batch"
+                        ).authenticated()
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/share/v1/*"
+                        ).permitAll()
+
                         .requestMatchers(
                                 "/mypage/v1/**",
                                 "/history/v1/**"
