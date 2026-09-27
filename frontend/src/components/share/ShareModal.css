@@ -1,0 +1,285 @@
+/* src/components/share/ShareModal.css */
+
+.share-modal-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.6);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    z-index: 1000;
+}
+
+.share-modal {
+
+    width: 420px;
+
+    max-width: 90vw;
+
+    background: #1E222A;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 20px;
+
+    padding: 28px;
+}
+
+.share-modal-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 8px;
+}
+
+.share-modal-header h3 {
+
+    font-size: 18px;
+
+    font-weight: 800;
+
+    color: white;
+}
+
+.share-modal-close {
+
+    border: none;
+
+    background: none;
+
+    color: #A0ABBA;
+
+    cursor: pointer;
+
+    display: flex;
+}
+
+.share-modal-close:hover {
+
+    color: white;
+}
+
+.share-modal-desc {
+
+    font-size: 13px;
+
+    color: #A0ABBA;
+
+    line-height: 1.5;
+
+    margin-bottom: 20px;
+}
+
+.share-modal-url-row {
+
+    display: flex;
+
+    gap: 8px;
+}
+
+.share-modal-url-row input {
+
+    flex: 1;
+
+    min-width: 0;
+
+    background: rgba(255, 255, 255, 0.04);
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 12px;
+
+    padding: 12px 14px;
+
+    color: white;
+
+    font-size: 13px;
+}
+
+.share-modal-copy-btn {
+
+    width: 44px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: linear-gradient(135deg, #58C3F5, #4AADDF);
+
+    color: white;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.share-modal-copy-btn:hover {
+
+    opacity: 0.85;
+}
+
+.share-modal-copied {
+
+    margin-top: 10px;
+
+    font-size: 12px;
+
+    color: #4AADDF;
+
+    font-weight: 600;
+}
+
+.share-modal-icon-row {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    justify-content: center;
+
+    column-gap: 14px;
+
+    row-gap: 16px;
+
+    margin-top: 18px;
+}
+
+.share-icon-btn {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 8px;
+
+    border: none;
+
+    background: none;
+
+    cursor: pointer;
+}
+
+.share-icon-tile {
+
+    width: 56px;
+
+    height: 56px;
+
+    border-radius: 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    overflow: hidden;
+
+    transition: transform 0.15s;
+}
+
+.share-icon-tile img {
+
+    width: 100%;
+
+    height: 100%;
+}
+
+/* 카카오 아이콘은 이미 원본 비율이 타일에 맞아서 그대로(비율 유지, 자르지 않음) */
+.share-icon-img-contain {
+
+    object-fit: contain;
+}
+
+/* 네이버 아이콘은 원본 이미지 안에서 초록 사각형이 중앙이 아니라 살짝 왼쪽에 치우쳐 있어서,
+   이미지 중심이 아니라 사각형 중심을 기준으로 확대해야 한쪽으로 안 쏠려 보인다 */
+.share-icon-img-cover {
+
+    object-fit: cover;
+
+    transform: scale(1.65);
+
+    transform-origin: 46% 48%;
+}
+
+.share-icon-btn:hover .share-icon-tile {
+
+    transform: scale(1.06);
+}
+
+.share-icon-tile-facebook {
+
+    /* 이미지가 원형 로고라 사각 타일의 네 모서리가 비기 때문에,
+       로고와 같은 페이스북 블루로 타일 배경을 채워서 이어붙인 것처럼 보이게 함 */
+    background: #0866FF;
+}
+
+.share-icon-tile-x {
+
+    background: #000000;
+
+    color: white;
+}
+
+.share-icon-tile-native {
+
+    background: rgba(255, 255, 255, 0.08);
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    color: white;
+}
+
+.share-icon-label {
+
+    font-size: 12px;
+
+    color: #A0ABBA;
+
+    font-weight: 600;
+}
+
+.share-modal-revoke-link {
+
+    display: block;
+
+    margin: 20px auto 0;
+
+    border: none;
+
+    background: none;
+
+    color: #A0ABBA;
+
+    font-size: 13px;
+
+    cursor: pointer;
+
+    text-decoration: underline;
+}
+
+.share-modal-revoke-link:hover {
+
+    color: #F87171;
+}

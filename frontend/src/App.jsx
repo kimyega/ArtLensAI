@@ -15,6 +15,7 @@ import ArtistExplore from "./pages/artists/ArtistExplore.jsx";
 import StyleMap from "./pages/styleMap/StyleMap.jsx";
 import History from "./pages/history/AnalysisHistory.jsx"
 import MyPage from "./pages/mypage/MyPage.jsx";
+import ShareView from "./pages/share/ShareView.jsx";
 
 // 🌟 주소 변화를 감지해서 애니메이션을 실행해주는 내부 컴포넌트
 function AnimatedRoutes() {
@@ -47,6 +48,7 @@ function AnimatedRoutes() {
                 <Route path="/style-map" element={<StyleMap/>} />
                 <Route path="/history" element={<History/>} />
                 <Route path="/mypage" element={<MyPage/>} />
+                <Route path="/share/:token" element={<ShareView/>} />
             </Routes>
         </>
     );

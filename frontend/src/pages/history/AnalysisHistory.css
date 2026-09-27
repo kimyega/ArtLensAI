@@ -542,3 +542,40 @@
 
     transform: scale(1.1);
 }
+
+.analysis-history-share-icon-btn {
+
+    position: absolute;
+
+    top: 12px;
+    left: 12px;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    background: rgba(18,20,26,0.85);
+
+    color: #4AADDF;
+
+    backdrop-filter: blur(8px);
+
+    z-index: 999;
+
+    transition: all 0.2s;
+}
+
+.analysis-history-share-icon-btn:hover {
+
+    background: rgba(74,173,223,0.15);
+
+    transform: scale(1.1);
+}

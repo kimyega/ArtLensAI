@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Calendar, ArrowRight, X, Trash2, CheckSquare, Square } from "lucide-react";
+import { Search, Calendar, ArrowRight, Share2, X, Trash2, CheckSquare, Square } from "lucide-react";
 import axiosInstance from "../../api/axiosInstance";
+import ShareButton from "../../components/share/ShareButton.jsx";
 import "./AnalysisHistory.css";
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -22,6 +23,9 @@ const AnalysisHistory = () => {
 
     const [deleteTargetIds, setDeleteTargetIds] = useState([]);
 
+    // 카드별 공유 상태를 한 번에 받아둠 (resultId -> ShareLinkDTO)
+    const [sharesByResultId, setSharesByResultId] = useState({});
+
     useEffect(() => {
         axiosInstance.get("/style-map/v1/list", { withCredentials: true })
             .then((res) => {
@@ -33,6 +37,29 @@ const AnalysisHistory = () => {
                 setLoading(false);
             });
     }, []);
+
+    // =============================
+    // 공유 상태 배치 조회 (카드마다 개별 호출하지 않도록 한 번에)
+    // =============================
+    useEffect(() => {
+
+        if (historyData.length === 0) return;
+
+        const params = new URLSearchParams();
+
+        historyData.forEach(item => {
+            params.append("resultIds", item.id);
+        });
+
+        axiosInstance.get(`/share/v1/mine/batch?${params.toString()}`)
+            .then(res => {
+                setSharesByResultId(res.data || {});
+            })
+            .catch(err => {
+                console.error("🚨 공유 상태 조회 실패:", err);
+            });
+
+    }, [historyData]);
 
     // 🎯 삭제 처리 함수
     const confirmDelete = async () => {
@@ -293,6 +320,20 @@ const AnalysisHistory = () => {
                                         >
                                             <Trash2 size={16}/>
                                         </button>
+                                    )}
+
+                                    {!isDeleteMode && (
+                                        <ShareButton
+                                            resultId={item.id}
+                                            title={item.title}
+                                            imgUrl={imgUrl}
+                                            initialShare={sharesByResultId[item.id] ?? null}
+                                            skipInitialFetch
+                                            stopPropagation
+                                            className="analysis-history-share-icon-btn"
+                                        >
+                                            <Share2 size={16} />
+                                        </ShareButton>
                                     )}
 
                                     <img
