@@ -341,6 +341,57 @@
     margin-bottom: 16px;
 }
 
+.style-map-panel-image-wrap {
+    position: relative;
+}
+
+.style-map-panel-like-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.55);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.style-map-panel-like-btn:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.style-map-panel-like-btn.liked {
+    color: #ff4d6d;
+}
+
+.style-map-panel-safebooru-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+    padding: 12px 16px;
+    border-radius: 999px;
+    border: none;
+    background: var(--style-map-sky);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.style-map-panel-safebooru-btn:hover {
+    background: #3a93c4;
+}
+
 .style-map-panel-tags {
     display: flex;
     flex-wrap: wrap;
@@ -465,6 +516,17 @@
     background: rgba(74, 173, 223, 0.1);
 }
 
+.style-map-liked-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.style-map-liked-filter-btn.active {
+    color: #ff4d6d;
+    background: rgba(255, 77, 109, 0.12);
+}
+
 .style-map-filter-btn {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid transparent;
@@ -517,6 +579,7 @@
     align-items: center;
     gap: 12px;
     padding: 10px 14px;
+    margin-top: 12px;
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.02);
     cursor: pointer;

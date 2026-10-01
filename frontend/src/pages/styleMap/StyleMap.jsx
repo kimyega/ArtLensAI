@@ -4,7 +4,7 @@ import axiosInstance from "../../api/axiosInstance.js";
 import * as d3 from "d3";
 import { FILTERS } from "../../components/data/FilterTags.js";
 
-import { Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { Eye, EyeOff, ChevronDown, Heart, ExternalLink } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -34,6 +34,9 @@ const StyleMap = () => {
     const [historyDropdownOpen, setHistoryDropdownOpen] = useState(false);
     const [showAllNames, setShowAllNames] = useState(false);
     const [selectedCluster, setSelectedCluster] = useState(null);
+
+    const [likedArtistIds, setLikedArtistIds] = useState(new Set());
+    const [onlyLiked, setOnlyLiked] = useState(false);
 
     const [userPosition, setUserPosition] = useState({
         x: centerX,
@@ -137,11 +140,47 @@ const StyleMap = () => {
     useEffect(() => {
         loadArtists();
         loadArtistProfiles();
+        loadLikedArtists();
     }, []);
+
+    const loadLikedArtists = async () => {
+        try {
+            const response = await axiosInstance.get("/like/v1/artists");
+            setLikedArtistIds(new Set(response.data.artistIds.map(String)));
+        } catch (e) {
+            console.log(e);
+        }
+    };
 
     const openUserPanel = () => {
         setSelectedArtist(null);
         setSidePanelOpen(true);
+    };
+
+    const handleToggleLike = async (artistId) => {
+        const key = String(artistId);
+        const nextLiked = !likedArtistIds.has(key);
+
+        setLikedArtistIds(prev => {
+            const next = new Set(prev);
+            nextLiked ? next.add(key) : next.delete(key);
+            return next;
+        });
+
+        try {
+            if (nextLiked) {
+                await axiosInstance.put(`/like/v1/artists/${artistId}`);
+            } else {
+                await axiosInstance.delete(`/like/v1/artists/${artistId}`);
+            }
+        } catch (e) {
+            console.log(e);
+            setLikedArtistIds(prev => {
+                const next = new Set(prev);
+                nextLiked ? next.delete(key) : next.add(key);
+                return next;
+            });
+        }
     };
 
     const loadArtists = async () => {
@@ -395,7 +434,9 @@ const StyleMap = () => {
                                 matchCluster = node.clusterLabel === selectedCluster;
                             }
 
-                            const isHighlighted = matchTag && matchCluster;
+                            const matchLiked = !onlyLiked || likedArtistIds.has(String(node.artistId));
+
+                            const isHighlighted = matchTag && matchCluster && matchLiked;
                             const nodeOpacity = isHighlighted ? 1 : 0.05;
                             const isFlashing = String(node.artistId) === String(flashingArtistId);
                             const isSelected = sidePanelOpen && selectedArtist && String(selectedArtist.artistId) === String(node.artistId);
@@ -629,6 +670,14 @@ const StyleMap = () => {
                         )}
 
                         <div className="style-map-category-bar">
+                            <button
+                                className={`style-map-category-btn style-map-liked-filter-btn ${onlyLiked ? "active" : ""}`}
+                                onClick={() => setOnlyLiked(!onlyLiked)}
+                            >
+                                <Heart size={14} fill={onlyLiked ? "currentColor" : "none"} />
+                                찜한 작가 {likedArtistIds.size}
+                            </button>
+                            <div className="style-map-category-divider"></div>
                             <button className={`style-map-category-btn ${selectedTag === null ? "active" : ""}`} onClick={() => { setSelectedTag(null); setActiveCategory(null); }}>
                                 전체보기
                             </button>
@@ -654,7 +703,16 @@ const StyleMap = () => {
                         {selectedArtist && (
                             <>
 
-                                <img src={`${API_URL}/analysis/v1/api/image/${profileImagePath}`} alt={selectedArtist.artistName} className="style-map-panel-image" />
+                                <div className="style-map-panel-image-wrap">
+                                    <img src={`${API_URL}/analysis/v1/api/image/${profileImagePath}`} alt={selectedArtist.artistName} className="style-map-panel-image" />
+                                    <button
+                                        className={`style-map-panel-like-btn ${likedArtistIds.has(String(selectedArtist.artistId)) ? "liked" : ""}`}
+                                        onClick={() => handleToggleLike(selectedArtist.artistId)}
+                                        title={likedArtistIds.has(String(selectedArtist.artistId)) ? "찜 해제" : "찜하기"}
+                                    >
+                                        <Heart size={18} fill={likedArtistIds.has(String(selectedArtist.artistId)) ? "currentColor" : "none"} />
+                                    </button>
+                                </div>
                                 <h2>{selectedArtist.artistName}</h2>
                                 <p>{selectedArtist.styleDesc}</p>
                                 <div className="style-map-panel-tags">
@@ -664,6 +722,17 @@ const StyleMap = () => {
                                         </span>
                                     ))}
                                 </div>
+
+                                <button
+                                    className="style-map-panel-safebooru-btn"
+                                    onClick={() => window.open(
+                                        `https://safebooru.org/index.php?page=post&s=list&tags=${selectedArtist.artistName}`,
+                                        '_blank'
+                                    )}
+                                >
+                                    Safebooru 작품 더보기
+                                    <ExternalLink size={16} />
+                                </button>
                             </>
                         )}
 
