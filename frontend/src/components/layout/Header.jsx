@@ -76,6 +76,15 @@ const Header = () => {
 
                 <li>
                     <Link
+                        to="/taste-test"
+                        className={isActive('/taste-test')}
+                    >
+                        취향 테스트
+                    </Link>
+                </li>
+
+                <li>
+                    <Link
                         to="/artist"
                         className={isActive('/artist')}
                     >

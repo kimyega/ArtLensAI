@@ -26,7 +26,7 @@ import {FILTERS} from "../../components/data/FilterTags.js";
 import ArtistLikeButton from "../../components/artists/ArtistLikeButton.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL;
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // 태그 -> 카테고리 역매핑 (자동완성 시 태그가 속한 카테고리를 찾기 위함)
 const TAG_CATEGORY_MAP = Object.entries(FILTERS)
@@ -105,6 +105,7 @@ const ArtistExplore = () => {
     const searchBoxRef = useRef(null);
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     const getImagePath = (url) =>
         url
@@ -127,6 +128,30 @@ const ArtistExplore = () => {
         }
 
     }, [selectedArtist]);
+
+    // =========================
+    // 다른 페이지(취향 테스트 결과 등)에서 특정 작가 상세보기로 바로 진입
+    // =========================
+    useEffect(() => {
+
+        const artistId = location.state?.artistId;
+
+        if (!artistId) {
+
+            return;
+        }
+
+        axiosInstance.get(`/artist/v1/explore?artistIds=${artistId}`)
+            .then(res => {
+
+                if (res.data?.[0]) {
+
+                    setSelectedArtist(res.data[0]);
+                }
+            })
+            .catch(console.error);
+
+    }, [location.state]);
 
     // =========================
     // 찜한 작가 목록 로드 (마운트 시 1회, 탭 배지 숫자/하트 상태 둘 다 여기서 파생)

@@ -9,6 +9,7 @@ import kopo.poly.artlensai.artist.domain.postgres.entity.ArtistEntity;
 import kopo.poly.artlensai.artist.domain.postgres.entity.ArtistImageEntity;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ArtistCoordRepository
@@ -17,4 +18,5 @@ public interface ArtistCoordRepository
                 Long
                 > {
 
+    Optional<ArtistCoordEntity> findByArtistId(Long artistId);
 }

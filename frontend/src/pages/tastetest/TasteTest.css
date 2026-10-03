@@ -1,0 +1,747 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+
+:root {
+    --taste-test-sky: #4aaddf;
+    --taste-test-bg: #1e222a;
+    --taste-test-border: rgba(255, 255, 255, 0.08);
+}
+
+.taste-test-page * {
+    box-sizing: border-box;
+}
+
+.taste-test-page {
+    position: relative;
+    min-height: 100vh;
+    padding-top: 92px;
+    background: var(--taste-test-bg);
+    color: white;
+    font-family: "Pretendard", sans-serif;
+    overflow: hidden;
+}
+
+.taste-test-bg-glow {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 0;
+    animation: taste-test-glow-pulse 16s infinite alternate;
+}
+
+.taste-test-glow-1 {
+    top: -15%;
+    left: 5%;
+    width: 50vw;
+    height: 50vw;
+    background: rgba(74, 173, 223, 0.25);
+}
+
+.taste-test-glow-2 {
+    bottom: -20%;
+    right: -10%;
+    width: 55vw;
+    height: 55vw;
+    background: rgba(138, 74, 223, 0.15);
+}
+
+@keyframes taste-test-glow-pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.15); }
+}
+
+.taste-test-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.taste-test-spinner {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.15);
+    border-top-color: var(--taste-test-sky);
+    animation: taste-test-spin 0.8s linear infinite;
+}
+
+@keyframes taste-test-spin {
+    to { transform: rotate(360deg); }
+}
+
+.taste-test-error-text {
+    color: #a0abba;
+}
+
+.taste-test-question-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    min-height: calc(100vh - 92px);
+    margin: 0 auto;
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.taste-test-progress {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.taste-test-progress-track {
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.taste-test-progress-fill {
+    height: 100%;
+    background: var(--taste-test-sky);
+    transition: width 0.3s ease;
+}
+
+.taste-test-progress-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: #a0abba;
+    white-space: nowrap;
+}
+
+.taste-test-question-title {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 36px;
+    text-align: center;
+}
+
+.taste-test-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    width: 100%;
+    perspective: 1400px;
+}
+
+.taste-test-option-card {
+    position: relative;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.35s ease, filter 0.35s ease;
+    transform-style: preserve-3d;
+    animation: taste-test-card-flip-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.taste-test-option-card:hover:not(:disabled) {
+    border-color: var(--taste-test-sky);
+    box-shadow: 0 10px 30px rgba(74, 173, 223, 0.25);
+}
+
+.taste-test-option-card:disabled {
+    cursor: default;
+}
+
+.taste-test-option-card.picked {
+    animation: taste-test-card-flip-pick 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    border-color: var(--taste-test-sky);
+    z-index: 2;
+}
+
+.taste-test-option-card.unpicked {
+    opacity: 0.15;
+    filter: grayscale(0.6) blur(1px);
+    transform: scale(0.88);
+    transition: opacity 0.4s ease, filter 0.4s ease, transform 0.4s ease;
+}
+
+@keyframes taste-test-card-flip-in {
+    from {
+        opacity: 0;
+        transform: rotateY(90deg) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: rotateY(0deg) scale(1);
+    }
+}
+
+@keyframes taste-test-card-flip-pick {
+    0% {
+        transform: rotateY(0deg) scale(1);
+        box-shadow: 0 0 0 rgba(74, 173, 223, 0);
+    }
+    35% {
+        transform: rotateY(-14deg) scale(1.14);
+        box-shadow: 0 0 45px 10px rgba(74, 173, 223, 0.65);
+    }
+    60% {
+        transform: rotateY(8deg) scale(1.1);
+        box-shadow: 0 0 35px 6px rgba(74, 173, 223, 0.55);
+    }
+    100% {
+        transform: rotateY(0deg) scale(1.1);
+        box-shadow: 0 0 25px 4px rgba(74, 173, 223, 0.5);
+    }
+}
+
+.taste-test-picked-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(74, 173, 223, 0.28);
+    animation: taste-test-overlay-fade-in 0.25s ease both;
+}
+
+.taste-test-picked-badge {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--taste-test-sky);
+    color: white;
+    box-shadow: 0 0 25px rgba(74, 173, 223, 0.9), 0 4px 12px rgba(0, 0, 0, 0.4);
+    animation: taste-test-badge-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+@keyframes taste-test-overlay-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes taste-test-badge-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.2);
+    }
+    60% {
+        opacity: 1;
+        transform: scale(1.25);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.taste-test-option-backdrop {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(25px) brightness(0.5) saturate(1.2);
+    transform: scale(1.2);
+    z-index: 0;
+}
+
+.taste-test-option-img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: min(58vh, 520px);
+    object-fit: contain;
+    display: block;
+    background: transparent;
+}
+
+.taste-test-step-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 32px;
+}
+
+.taste-test-step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    transition: all 0.3s ease;
+}
+
+.taste-test-step-dot.done {
+    background: var(--taste-test-sky);
+}
+
+.taste-test-step-dot.active {
+    width: 22px;
+    border-radius: 999px;
+    background: var(--taste-test-sky);
+    box-shadow: 0 0 10px rgba(74, 173, 223, 0.6);
+}
+
+.taste-test-question-hint {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #a0abba;
+    text-align: center;
+}
+
+.taste-test-result-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 70px 24px 80px;
+}
+
+.taste-test-result-hero {
+    text-align: center;
+    padding-bottom: 40px;
+    margin-bottom: 36px;
+    border-bottom: 1px solid var(--taste-test-border);
+}
+
+.taste-test-result-badge {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--taste-test-accent, var(--taste-test-sky)) 18%, transparent);
+    color: var(--taste-test-accent, var(--taste-test-sky));
+    box-shadow: 0 0 35px color-mix(in srgb, var(--taste-test-accent, var(--taste-test-sky)) 45%, transparent);
+}
+
+.taste-test-result-label {
+    color: #a0abba;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.taste-test-result-title {
+    font-size: 34px;
+    font-weight: 800;
+    margin: 8px 0 12px;
+    color: var(--taste-test-accent, var(--taste-test-sky));
+}
+
+.taste-test-result-desc {
+    font-size: 13px;
+    color: #a0abba;
+    line-height: 1.6;
+    margin: 0 auto 32px;
+    max-width: 440px;
+}
+
+.taste-test-result-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.taste-test-btn-outline,
+.taste-test-btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.taste-test-btn-outline {
+    background: transparent;
+    border: 1px solid var(--taste-test-border);
+    color: white;
+}
+
+.taste-test-btn-outline:hover {
+    border-color: var(--taste-test-sky);
+    color: var(--taste-test-sky);
+}
+
+.taste-test-btn-primary {
+    background: var(--taste-test-sky);
+    border: none;
+    color: white;
+}
+
+.taste-test-btn-primary:hover {
+    background: #3a93c4;
+}
+
+.taste-test-result-section {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--taste-test-border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.taste-test-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    color: var(--taste-test-accent, var(--taste-test-sky));
+}
+
+.taste-test-section-header h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+}
+
+.taste-test-section-count {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: #a0abba;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+
+.taste-test-artist-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.taste-test-history-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+
+.taste-test-history-thumb-btn {
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.taste-test-history-thumb-btn:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.taste-test-history-thumb {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--taste-test-border);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.taste-test-artist-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--taste-test-border);
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.taste-test-artist-row:hover {
+    border-color: rgba(74, 173, 223, 0.4);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.taste-test-artist-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.taste-test-artist-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.taste-test-artist-name {
+    font-weight: 700;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.taste-test-artist-percent {
+    font-size: 12px;
+    color: var(--taste-test-sky);
+    font-weight: 700;
+}
+
+.taste-test-artist-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.taste-test-like-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--taste-test-border);
+    background: transparent;
+    color: #a0abba;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.taste-test-like-btn.liked {
+    color: #ff4d6d;
+    border-color: #ff4d6d;
+    background: rgba(255, 77, 109, 0.1);
+}
+
+.taste-test-detail-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--taste-test-border);
+    background: rgba(74, 173, 223, 0.08);
+    color: var(--taste-test-sky);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.taste-test-detail-btn:hover {
+    background: var(--taste-test-sky);
+    color: white;
+}
+
+/* =========================================
+   작가 상세보기 모달
+========================================= */
+.taste-test-modal-overlay {
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(18, 20, 26, 0.75);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.3s;
+    padding: 24px;
+}
+
+.taste-test-modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.taste-test-modal {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    max-height: calc(100vh - 72px - 48px);
+    overflow-y: auto;
+    background: rgba(30, 34, 42, 0.97);
+    border: 1px solid var(--taste-test-border);
+    border-radius: 24px;
+    transform: translateY(16px) scale(0.96);
+    transition: 0.3s;
+    text-align: left;
+}
+
+.taste-test-modal-overlay.show .taste-test-modal {
+    transform: translateY(0) scale(1);
+}
+
+.taste-test-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 2;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.taste-test-modal-cover {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+    border-radius: 24px 24px 0 0;
+}
+
+.taste-test-modal-body {
+    padding: 28px;
+}
+
+.taste-test-modal-name {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 20px;
+}
+
+.taste-test-modal-section {
+    margin-bottom: 20px;
+}
+
+.taste-test-modal-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #a0abba;
+}
+
+.taste-test-modal-desc {
+    padding: 14px 16px;
+    border-radius: 14px;
+    line-height: 1.7;
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.taste-test-modal-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.taste-test-tag {
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 12px;
+    color: var(--taste-test-sky);
+}
+
+.taste-test-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.taste-test-modal-actions .taste-test-btn-outline,
+.taste-test-modal-actions .taste-test-btn-primary,
+.taste-test-modal-actions .taste-test-like-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 13px 14px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* =========================================
+   내가 고른 그림 라이트박스
+========================================= */
+.taste-test-lightbox-overlay {
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(18, 20, 26, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.3s;
+    padding: 24px;
+}
+
+.taste-test-lightbox-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.taste-test-lightbox {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    max-height: calc(100vh - 72px - 48px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    background: rgba(30, 34, 42, 0.97);
+    border: 1px solid var(--taste-test-border);
+    border-radius: 24px;
+    padding: 20px;
+    transform: translateY(16px) scale(0.96);
+    transition: 0.3s;
+}
+
+.taste-test-lightbox-overlay.show .taste-test-lightbox {
+    transform: translateY(0) scale(1);
+}
+
+.taste-test-lightbox-img {
+    width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.taste-test-lightbox-action {
+    width: 100%;
+    justify-content: center;
+}
