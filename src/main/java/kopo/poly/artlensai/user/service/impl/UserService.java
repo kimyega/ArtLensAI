@@ -160,6 +160,15 @@ public class UserService implements IUserService {
         UserEntity rEntity = userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username + "Not Found User"));
 
+        if (!Boolean.TRUE.equals(
+                rEntity.getIsActive()
+        )) {
+
+            throw new UsernameNotFoundException(
+                    "탈퇴한 회원입니다."
+            );
+        }
+
         // rEntity 데이터를 DTO로 변환하기
         UserDTO rDTO = UserDTO.from(rEntity);
 

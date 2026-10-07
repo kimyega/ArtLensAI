@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import './Login.css';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import {Link, useNavigate} from 'react-router-dom';
+import axiosInstance from '../../api/axiosInstance';
+import {useAuth} from "../../context/AuthContext.jsx";
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -11,6 +12,10 @@ const Login = () => {
     const [passwordError, setPasswordError] = useState('');
 
     const navigate = useNavigate();
+
+    const {
+        fetchUserInfo
+    } = useAuth();
 
     // =========================
     // 🔥 유효성 검사
@@ -53,25 +58,41 @@ const Login = () => {
         if (!isEmailValid || !isPasswordValid) return;
 
         try {
-            const response = await axios.post(
-                'http://localhost:8080/user/login',
-                { email, password },
-                { withCredentials: true }
-            );
 
-            const { result, token, refreshToken, msg } = response.data;
+            const response =
+                await axiosInstance.post(
+                    '/login/v1/loginProc',
+                    {
+                        email,
+                        password
+                    }
+                );
 
-            if (result === 1 && token) {
-                localStorage.setItem('token', token);
-                localStorage.setItem('refreshToken', refreshToken);
+            const result =
+                response.data.data.result;
+
+            const msg =
+                response.data.data.msg;
+
+            if (result === 1) {
+
+                await fetchUserInfo();
+
                 navigate('/');
+
             } else {
-                // 🔥 서버 메시지 표시 (예: 가입되지 않은 이메일)
-                setPasswordError(msg || '로그인 실패');
+
+                setPasswordError(
+                    msg || '로그인 실패'
+                );
             }
 
         } catch (error) {
-            setPasswordError('서버 오류 또는 로그인 실패');
+
+
+            setPasswordError(
+                '아이디 또는 비밀번호가 올바르지 않습니다.'
+            );
         }
     };
 

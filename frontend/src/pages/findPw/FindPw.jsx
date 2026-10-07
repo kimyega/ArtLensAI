@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import './FindPw.css';
+import axiosInstance from "../../api/axiosInstance.js";
 
 const FindPw = () => {
     const [email, setEmail] = useState('');
@@ -28,46 +29,48 @@ const FindPw = () => {
 
     // 비밀번호 찾기 요청
     const handleSubmit = async (e) => {
+
         e.preventDefault();
+
         setSuccessMsg('');
 
         const isValid = validateEmail();
+
         if (!isValid) return;
 
         try {
-            // 1. 이메일 존재 여부 체크
-            const res = await fetch("http://localhost:8080/user/checkEmail", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email })
-            });
 
-            const data = await res.json();
+            const response =
+                await axiosInstance.post(
+                    '/auth/v1/password/reset-request',
+                    {
+                        email
+                    }
+                );
 
-            // ❌ 가입 안된 이메일
-            if (data.result === 1) {
-                setEmailError("가입되지 않은 이메일입니다.");
-                return;
-            }
+            const result =
+                response.data.data.result;
 
-            // 2. 가입된 이메일 → 비밀번호 재설정 요청
-            const resetRes = await fetch("http://localhost:8080/user/findPw", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email })
-            });
+            const msg =
+                response.data.data.msg;
 
-            const resetData = await resetRes.json();
+            if (result === 1) {
 
-            if (resetData.result === 1) {
                 setEmailError('');
-                setSuccessMsg("비밀번호 재설정 링크를 이메일로 발송했습니다.");
+
+                setSuccessMsg(msg);
+
             } else {
-                setEmailError(resetData.msg || "요청 실패");
+
+                setEmailError(msg);
             }
 
-        } catch (err) {
-            setEmailError("서버 오류가 발생했습니다.");
+        } catch (error) {
+
+            setEmailError(
+                error.response?.data?.data?.msg
+                || '서버 오류가 발생했습니다.'
+            );
         }
     };
 

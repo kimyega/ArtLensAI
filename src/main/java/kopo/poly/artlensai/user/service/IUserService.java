@@ -1,23 +1,29 @@
 package kopo.poly.artlensai.user.service;
 
 import kopo.poly.artlensai.user.dto.UserDTO;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.Optional;
 
-public interface IUserService {
+public interface IUserService extends UserDetailsService {
     /**
-     * 이메일로 유저 조회
+     * 이메일 중복체크
      */
-    public Optional<UserDTO> getUserLogin(UserDTO pDTO);
+    UserDTO getEmailExists(UserDTO pDTO) throws Exception;
 
     /**
      * 회원가입
      */
-    void insertUser(UserDTO pDTO);
+    int insertUser(UserDTO pDTO);
 
-    boolean existsEmail(String email);
-
+    /**
+     * 본인 회원 정보 조회
+     */
     UserDTO getUserByEmail(String email);
 
+    /**
+     * 비밀번호 변경
+     */
     void updatePassword(String email, String newPassword);
 }

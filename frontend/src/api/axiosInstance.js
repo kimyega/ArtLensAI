@@ -1,85 +1,56 @@
-import axios from 'axios';
+import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const axiosInstance = axios.create({
-    baseURL: 'http://localhost:8080',
-    timeout: 5000
+    baseURL: API_URL,
+    timeout: 120000,
+    withCredentials: true
 });
 
-// =========================
-// 요청 인터셉터
-// =========================
-axiosInstance.interceptors.request.use(
-    (config) => {
-
-        const token = localStorage.getItem('token');
-
-        if (token) {
-            config.headers.Authorization =
-                `Bearer ${token}`;
-        }
-
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
-// =========================
-// 응답 인터셉터
-// =========================
 axiosInstance.interceptors.response.use(
 
-    // 정상 응답
-    (response) => response,
+    response => response,
 
-    // 에러 응답
-    async (error) => {
+    async error => {
+
+        if (!error.response) {
+            return Promise.reject(error);
+        }
 
         const originalRequest = error.config;
 
-        // AccessToken 만료
+        const isExcluded = [
+            "/user/login",
+            "/login/v1/loginProc",
+            "/auth/v1/refresh",
+            "/auth/v1/password/validate"
+        ].some(url =>
+            originalRequest.url?.includes(url)
+        );
+
         if (
-            error.response?.status === 401 &&
-            !originalRequest._retry
+            error.response.status === 401 &&
+            !originalRequest._retry &&
+            !isExcluded
         ) {
 
             originalRequest._retry = true;
 
             try {
 
-                const refreshToken =
-                    localStorage.getItem('refreshToken');
-
-                // refresh API 요청
-                const response = await axios.post(
-                    'http://localhost:8080/user/refresh',
-                    { refreshToken }
+                await refreshClient.post(
+                    "/auth/v1/refresh"
                 );
 
-                const newAccessToken =
-                    response.data.token;
-
-                // 새 토큰 저장
-                localStorage.setItem(
-                    'token',
-                    newAccessToken
+                return axiosInstance(
+                    originalRequest
                 );
 
-                // 원래 요청 헤더 교체
-                originalRequest.headers.Authorization =
-                    `Bearer ${newAccessToken}`;
+            } catch (e) {
 
-                // 원래 요청 재시도
-                return axiosInstance(originalRequest);
+                window.location.href = "/login";
 
-            } catch (refreshError) {
-
-                // refresh도 실패
-                localStorage.removeItem('token');
-                localStorage.removeItem('refreshToken');
-
-                window.location.href = '/login';
-
-                return Promise.reject(refreshError);
+                return Promise.reject(e);
             }
         }
 

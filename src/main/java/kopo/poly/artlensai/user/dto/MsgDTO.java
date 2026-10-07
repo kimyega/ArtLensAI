@@ -1,13 +1,12 @@
 package kopo.poly.artlensai.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 
 @Builder
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public record MsgDTO(
         int result,      // 성공 : 1 / 실패 : 그 외
         String msg,      // 메시지
-        String token,     // JWT 토큰 (로그인 성공 시)
-        String refreshToken,
-        String code,
         Object dto
 ) {}

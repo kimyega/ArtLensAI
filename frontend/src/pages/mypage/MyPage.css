@@ -1,0 +1,439 @@
+.my-page-page {
+
+    min-height: 100vh;
+
+    background: #12141A;
+
+    padding: 110px 40px 60px;
+}
+
+.my-page-wrapper {
+
+    max-width: 1100px;
+
+    margin: 0 auto;
+}
+
+.my-page-header {
+
+    margin-bottom: 30px;
+}
+
+.my-page-header h1 {
+
+    color: white;
+
+    font-size: 34px;
+
+    font-weight: 800;
+
+    margin-bottom: 8px;
+}
+
+.my-page-header p {
+
+    color: #A0ABBA;
+
+    font-size: 15px;
+}
+
+.my-page-settings-card {
+
+    background: rgba(30,34,42,0.8);
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    border-radius: 20px;
+
+    padding: 28px;
+
+    margin-bottom: 24px;
+
+    backdrop-filter: blur(10px);
+}
+
+.my-page-profile-summary {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+}
+
+.my-page-profile-info {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 20px;
+}
+
+.my-page-profile-avatar {
+
+    width: 72px;
+
+    height: 72px;
+
+    border-radius: 50%;
+
+    background: linear-gradient(
+            135deg,
+            #4AADDF,
+            #7C6CFF
+    );
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: white;
+
+    font-size: 28px;
+
+    font-weight: 800;
+}
+
+.my-page-profile-text h2 {
+
+    color: white;
+
+    margin-bottom: 6px;
+}
+
+.my-page-profile-text p {
+
+    color: #A0ABBA;
+}
+
+.my-page-profile-stats {
+
+    display: flex;
+
+    gap: 50px;
+}
+
+.my-page-stat-item {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+.my-page-stat-label {
+
+    color: #A0ABBA;
+
+    font-size: 13px;
+}
+
+.my-page-stat-value {
+
+    color: white;
+
+    font-size: 18px;
+
+    font-weight: 700;
+}
+
+.my-page-card-title {
+
+    color: white;
+
+    font-size: 20px;
+
+    font-weight: 700;
+
+    margin-bottom: 24px;
+}
+
+.my-page-form-group {
+
+    display: flex;
+
+    flex-direction: column;
+
+    margin-bottom: 18px;
+}
+
+.my-page-form-group label {
+
+    color: #A0ABBA;
+
+    margin-bottom: 8px;
+
+    font-size: 14px;
+}
+
+.my-page-input {
+
+    height: 48px;
+
+    border-radius: 12px;
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    background: rgba(255,255,255,0.03);
+
+    color: white;
+
+    padding: 0 16px;
+
+    outline: none;
+}
+
+.my-page-input:focus {
+
+    border-color: #4AADDF;
+
+    box-shadow:
+            0 0 0 3px rgba(74,173,223,0.15);
+}
+
+.my-page-form-actions {
+
+    margin-top: 20px;
+}
+
+.my-page-btn-primary {
+
+    height: 48px;
+
+    padding: 0 24px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #4AADDF;
+
+    color: white;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.my-page-btn-primary:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+            0 10px 25px rgba(74,173,223,0.3);
+}
+
+.my-page-danger-zone {
+
+    border-color:
+            rgba(239,68,68,0.25);
+}
+
+.my-page-danger-desc {
+
+    color: #A0ABBA;
+
+    margin-bottom: 18px;
+
+    line-height: 1.6;
+}
+
+.my-page-btn-danger {
+
+    height: 48px;
+
+    padding: 0 24px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #EF4444;
+
+    color: white;
+
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.my-page-btn-danger:hover {
+
+    background: #dc2626;
+}
+
+.my-page-settings-card:hover {
+    border-color: rgba(74,173,223,0.25);
+}
+
+.my-page-modal-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0,0,0,0.75);
+
+    backdrop-filter: blur(8px);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    z-index: 9999;
+}
+
+.my-page-modal-content {
+
+    width: 450px;
+
+    background: #1E222A;
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    border-radius: 20px;
+
+    padding: 32px;
+
+    color: white;
+
+    box-shadow:
+            0 20px 60px rgba(0,0,0,0.5);
+}
+
+.my-page-modal-content h2 {
+
+    margin-bottom: 12px;
+
+    font-size: 24px;
+}
+
+.my-page-modal-content p {
+
+    color: #A0ABBA;
+
+    margin-bottom: 20px;
+}
+
+.my-page-modal-input {
+
+    width: 100%;
+
+    height: 48px;
+
+    border-radius: 12px;
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    background: rgba(255,255,255,0.03);
+
+    color: white;
+
+    padding: 0 16px;
+
+    margin-bottom: 20px;
+}
+
+.my-page-modal-actions {
+
+    display: flex;
+
+    gap: 12px;
+}
+
+.my-page-btn-outline {
+
+    flex: 1;
+
+    height: 48px;
+
+    border-radius: 12px;
+
+    border: 1px solid rgba(255,255,255,0.12);
+
+    background: transparent;
+
+    color: white;
+
+    cursor: pointer;
+}
+
+.my-page-modal-actions .my-page-btn-danger {
+
+    flex: 1;
+}
+
+.my-page-toast {
+
+    position: fixed;
+
+    top: 100px;
+
+    right: 30px;
+
+    z-index: 10000;
+
+    min-width: 280px;
+
+    padding: 14px 20px;
+
+    border-radius: 12px;
+
+    color: white;
+
+    font-weight: 600;
+
+    box-shadow:
+            0 10px 30px rgba(0,0,0,0.3);
+
+    animation:
+            my-page-toast-slide 0.25s ease;
+}
+
+.my-page-toast.success {
+
+    background: #22c55e;
+}
+
+.my-page-toast.error {
+
+    background: #ef4444;
+}
+
+@keyframes my-page-toast-slide {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+                translateY(-10px);
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+                translateY(0);
+    }
+}
+
+.my-page-delete-error {
+
+    color: #EF4444;
+
+    font-size: 13px;
+
+    margin-top: -12px;
+
+    margin-bottom: 16px;
+}

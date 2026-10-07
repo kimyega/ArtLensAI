@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
 import './ResetPassword.css';
+import axiosInstance
+    from '../../../api/axiosInstance';
 
 const ResetPassword = () => {
     const [newPassword, setNewPassword] = useState('');
@@ -16,54 +17,51 @@ const ResetPassword = () => {
         onConfirm: null
     });
 
-    const [loading, setLoading] = useState(true);
-    const [checked, setChecked] = useState(false);
-    const [isValid, setIsValid] = useState(false);
 
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
     const token = searchParams.get("token");
 
-    // 🔥 토큰 검증
+    const [loading, setLoading] =
+        useState(true);
+
     useEffect(() => {
-        const run = async () => {
 
-            if (!token) {
-                setIsValid(false);
-                setChecked(true);
-                setLoading(false);
-                return;
-            }
+        const validateToken =
+            async () => {
 
-            try {
-                const res = await axios.get(
-                    `http://localhost:8080/user/validateResetToken?token=${token}`
-                );
+                if (!token) {
 
-                if (res.data.result === 1) {
-                    setIsValid(true);
-                } else {
-                    setIsValid(false);
+                    navigate('/reset-exp');
+                    return;
                 }
 
-            } catch (err) {
-                setIsValid(false);
-            } finally {
-                setChecked(true);
-                setLoading(false);
-            }
-        };
+                try {
 
-        run();
-    }, [token]);
+                    const res = await axiosInstance.get(
+                        `/auth/v1/password/validate?token=${token}`
+                    );
 
-    // 🔥 invalid면 자동 이동
-    useEffect(() => {
-        if (checked && !isValid) {
-            navigate('/reset-exp');
-        }
-    }, [checked, isValid, navigate]);
+                    console.log("VALIDATE SUCCESS", res);
+
+                } catch (e) {
+
+                    console.log("VALIDATE ERROR", e);
+                    console.log("STATUS", e.response?.status);
+
+                    navigate('/reset-exp');
+                    return;
+
+                } finally {
+
+                    setLoading(false);
+                }
+            };
+
+        void validateToken();
+
+    }, [token, navigate]);
 
     const closeModal = () =>
         setModalConfig(prev => ({ ...prev, isOpen: false }));
@@ -112,29 +110,43 @@ const ResetPassword = () => {
         if (!isPwValid || !isConfirmValid) return;
 
         try {
-            await axios.post('http://localhost:8080/user/resetPassword', {
-                token,
-                newPassword
-            });
+            await axiosInstance.post(
+                '/auth/v1/password/reset',
+                {
+                    token,
+                    newPassword
+                }
+            );
 
             navigate('/reset-suc');
 
         } catch (err) {
+
+            if (err.response?.status === 401) {
+
+                navigate('/reset-exp');
+
+                return;
+            }
+
             setModalConfig({
                 isOpen: true,
-                message: '서버 오류가 발생했습니다.',
+                message:
+                    err.response?.data?.data?.msg
+                    || '서버 오류가 발생했습니다.',
                 onConfirm: closeModal
             });
         }
     };
 
-    // 🔥 로딩
-    if (loading || !checked) {
-        return <div className="loading-wrapper">로딩중...</div>;
+    if (loading) {
+        return (
+            <div className="loading-wrapper">
+                로딩중...
+            </div>
+        );
     }
 
-    // 🔥 정상 아닌 경우 UI 안그림 (redirect는 useEffect에서 처리)
-    if (!isValid) return null;
 
     return (
         <>

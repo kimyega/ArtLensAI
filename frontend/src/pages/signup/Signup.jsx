@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Signup.css';
+import axiosInstance from "../../api/axiosInstance.js";
 
 const Signup = () => {
     console.log("🔥 Signup 렌더됨");
@@ -94,63 +95,85 @@ const Signup = () => {
     // (기존 코드 중 handleSendEmail 함수만 아래 내용으로 교체해 주세요)
 
     const checkEmailDuplicate = async (email) => {
-        const res = await fetch("http://localhost:8080/user/checkEmail", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email })
-        });
 
-        return await res.json();
+        const response =
+            await axiosInstance.post(
+                '/reg/v1/getEmailExists',
+                {
+                    email
+                }
+            );
+
+        return response.data.data;
     };
 
     const sendVerificationCode = async (email) => {
-        const res = await fetch("http://localhost:8080/user/sendCode", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email })
-        });
 
-        return await res.json();
+        const response =
+            await axiosInstance.post(
+                '/reg/v1/sendCode',
+                {
+                    email
+                }
+            );
+
+        return response.data;
     };
 
     const handleSendEmail = async () => {
-        if (!validateEmail()) return;
+
+        if (!validateEmail()) {
+            return;
+        }
 
         try {
-            // 1. 중복 체크
-            const checkData = await checkEmailDuplicate(email);
 
-            if (checkData.code === "EMAIL_DUPLICATE") {
-                setEmailError("이미 가입된 이메일입니다.");
+            // 1. 이메일 중복 체크
+            const checkData =
+                await checkEmailDuplicate(email);
+
+            if (checkData.existsYn === 'Y') {
+
+                setEmailError(
+                    '이미 가입된 이메일입니다.'
+                );
+
                 return;
             }
 
             // 2. 인증번호 발송
-            const data = await sendVerificationCode(email);
+            const data =
+                await sendVerificationCode(email);
 
-            if (data.result === 1) {
+            if (data.data.result === 1) {
+
                 setModalConfig({
                     isOpen: true,
-                    message: "인증번호가 발송되었습니다.",
+                    message: '인증번호가 발송되었습니다.',
                     onConfirm: () => {
+
                         setIsEmailSent(true);
                         setTimeLeft(180);
                         setVerificationError('');
+
                         closeModal();
                     }
                 });
+
             } else {
+
                 setModalConfig({
                     isOpen: true,
-                    message: data.msg,
+                    message: data.data.msg,
                     onConfirm: closeModal
                 });
             }
 
-        } catch (e) {
+        } catch (error) {
+
             setModalConfig({
                 isOpen: true,
-                message: "서버 오류",
+                message: '서버 오류가 발생했습니다.',
                 onConfirm: closeModal
             });
         }
@@ -159,99 +182,147 @@ const Signup = () => {
     const handleVerifyCode = async () => {
 
         if (timeLeft === 0) {
-            setVerificationError("인증 시간이 만료되었습니다.");
+
+            setVerificationError(
+                '인증 시간이 만료되었습니다.'
+            );
+
             return;
         }
 
         try {
-            const res = await fetch("http://localhost:8080/user/verifyCode", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    email,
-                    code: verificationCode
-                })
-            });
 
-            const data = await res.json();
+            const response =
+                await axiosInstance.post(
+                    '/reg/v1/verifyCode',
+                    {
+                        email,
+                        code: verificationCode
+                    }
+                );
+
+            const data =
+                response.data.data;
 
             if (data.result === 1) {
+
                 setIsEmailVerified(true);
                 setVerificationError('');
+
             } else {
-                setVerificationError("인증번호가 일치하지 않습니다.");
+
+                setVerificationError(
+                    '인증번호가 일치하지 않습니다.'
+                );
             }
 
-        } catch (e) {
-            setVerificationError("서버 오류");
+        } catch (error) {
+
+            setVerificationError(
+                '서버 오류가 발생했습니다.'
+            );
         }
     };
 
     const handleSubmit = async (e) => {
+
         e.preventDefault();
 
-        const isEmailValid = validateEmail();
-        const isNicknameValid = validateNickname();
-        const isPasswordValid = validatePassword();
-        const isConfirmValid = validateConfirmPassword();
+        const isEmailValid =
+            validateEmail();
 
-        if (!isEmailValid || !isNicknameValid || !isPasswordValid || !isConfirmValid) return;
+        const isNicknameValid =
+            validateNickname();
+
+        const isPasswordValid =
+            validatePassword();
+
+        const isConfirmValid =
+            validateConfirmPassword();
+
+        if (
+            !isEmailValid ||
+            !isNicknameValid ||
+            !isPasswordValid ||
+            !isConfirmValid
+        ) {
+            return;
+        }
 
         if (!isEmailVerified) {
-            setModalConfig({ isOpen: true, message: '이메일 인증을 완료해 주세요.', onConfirm: closeModal });
+
+            setModalConfig({
+                isOpen: true,
+                message:
+                    '이메일 인증을 완료해 주세요.',
+                onConfirm: closeModal
+            });
+
             return;
         }
 
         if (!agreeTerms) {
-            setModalConfig({ isOpen: true, message: '이용약관 및 개인정보처리방침에\n동의해 주세요.', onConfirm: closeModal });
+
+            setModalConfig({
+                isOpen: true,
+                message:
+                    '이용약관 및 개인정보처리방침에 동의해 주세요.',
+                onConfirm: closeModal
+            });
+
             return;
         }
 
         try {
-            const res = await fetch("http://localhost:8080/user/signup", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    email,
-                    password,
-                    nickname
-                })
-            });
 
-            const data = await res.json();
+            const response =
+                await axiosInstance.post(
+                    '/reg/v1/insertUser',
+                    {
+                        email,
+                        password,
+                        nickname
+                    }
+                );
 
-            if (data.result === 1) {
+            const result =
+                response.data.data.result;
+
+            const msg =
+                response.data.data.msg;
+
+            if (result === 1) {
+
                 setModalConfig({
                     isOpen: true,
-                    message: 'ArtLens ai 회원가입이\n성공적으로 완료되었습니다! 🎉',
+                    message:
+                        'ArtLens ai 회원가입이 성공적으로 완료되었습니다! 🎉',
                     onConfirm: () => {
+
                         closeModal();
+
                         navigate('/login');
                     }
                 });
-            } else {
 
-                // 🔥 코드 기반 처리
-                if (data.code === "EMAIL_DUPLICATE") {
-                    setEmailError("이미 가입된 이메일입니다.");
-                    return;
-                }
+            } else {
 
                 setModalConfig({
                     isOpen: true,
-                    message: data.msg,
+                    message: msg,
                     onConfirm: closeModal
                 });
             }
 
         } catch (error) {
+
+            const msg =
+                error.response?.data?.data?.msg
+                || '서버 오류가 발생했습니다.';
+
             setModalConfig({
                 isOpen: true,
-                message: '서버 오류가 발생했습니다.',
+                message: msg,
                 onConfirm: closeModal
             });
         }

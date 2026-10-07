@@ -1,308 +1,97 @@
 package kopo.poly.artlensai.user.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
-import kopo.poly.artlensai.global.util.CmmUtil;
-import kopo.poly.artlensai.global.util.JwtUtil;
-import kopo.poly.artlensai.user.dto.MailDTO;
-import kopo.poly.artlensai.user.dto.MsgDTO;
+import kopo.poly.artlensai.global.response.CommonResponse;
 import kopo.poly.artlensai.user.dto.UserDTO;
 import kopo.poly.artlensai.user.service.IUserService;
-import kopo.poly.artlensai.user.service.impl.MailService;
-import kopo.poly.artlensai.user.service.impl.RedisTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
 import java.util.Optional;
 
+/**
+ * 사용자 정보 조회 컨트롤러
+ * <p>
+ * 목적
+ * - 요청에 포함된 JWT(쿠키 또는 Authorization 헤더)에서 사용자 식별자(subject)를 읽고,
+ * DB에서 해당 사용자의 상세 정보를 조회하여 반환한다.
+ * <p>
+ * 전체
+ * - SecurityConfig에서 /user/** 경로는 인증을 요구하므로, 정상요청에서는 리소스 서버가
+ * 이미 인증을 완료한 상태로 본 메서드에 진입한다. 따라서 일반적으로 jwt는 null이 아니다.
+ * - 그래도 방어적으로 jwt == null인 경우에 대한 처리(401)을 넣어 두었다.
+ * <p>
+ * 참고
+ * - @AuthenticationPrincipal Jwt jwt로 JWT를 직접 주입받는다.
+ * 대안으로는 @AuthenticationPrincipal(expression = "subject") String userId 사용도 가능하다.
+ */
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/user/v1")
 @RequiredArgsConstructor
 @Slf4j
 public class UserController {
 
+    /**
+     * 사용자 정보 조회용 서비스
+     */
     private final IUserService userService;
-    private final JwtUtil jwtUtil;
-    private final MailService mailService;
-    private final RedisTokenService redisTokenService;
 
-    @PostMapping("/login")
-    public MsgDTO login(@RequestBody UserDTO pDTO) throws Exception {
-        log.info("{}.login Start! email: {}", this.getClass().getName(), pDTO.email());
+    /**
+     * 현재 로그인 사용자의 상세 정보를 반환한다.
+     * <p>
+     * 반환 정책
+     * - 성공(인증됨) : 200 OK + CommonResponse<UserDTO>
+     * - 인증되지 않음(jwt == null) : 401 Unauthorized
+     * <p>
+     * 주의
+     * - 본 엔드포인트는 조회 성격이므로 GET이 더 REST스럽지만,
+     * 쿠키 기반 인증/캐시 회피등의 이유로 POST를 사용할 수도 있다.
+     */
+    @PostMapping(value = "userInfo")
+    public ResponseEntity<CommonResponse<UserDTO>> userInfo(@AuthenticationPrincipal Jwt jwt) throws Exception{
+        log.info("{}.userInfo Start!", getClass().getName());
 
-        Optional<UserDTO> userOpt = userService.getUserLogin(pDTO);
-
-        if (userOpt.isPresent()) {
-            String token = jwtUtil.generateAccessToken(userOpt.get().email());
-            String refreshToken = jwtUtil.generateRefreshToken(userOpt.get().email());
-
-            redisTokenService.saveRefreshToken(
-                    userOpt.get().email(),
-                    refreshToken
-            );
-
-            return MsgDTO.builder()
-                    .result(1)
-                    .msg("로그인 성공")
-                    .token(token)
-                    .refreshToken(refreshToken)
-                    .build();
-        } else {
-            return MsgDTO.builder()
-                    .result(0)
-                    .msg("이메일 또는 비밀번호가 일치하지 않습니다.")
-                    .token(null)
-                    .refreshToken(null)
-                    .build();
-        }
-    }
-
-    @PostMapping("/signup")
-    public MsgDTO signup(@RequestBody UserDTO pDTO) {
-
-        if (!mailService.isVerified(pDTO.email())) {
-            return MsgDTO.builder()
-                    .result(0)
-                    .msg("이메일 인증이 필요합니다.")
-                    .code("EMAIL_NOT_VERIFIED")
-                    .build();
+        // 방어적 처리: 보안 설정상 도달하지 않아야 하지만, 혹시 모를 잘못된 호출 대비
+        if (jwt == null) {
+            log.warn("JWT principal is null - unauthorized access to /user/v1/userInfo");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(CommonResponse.of(
+                            HttpStatus.UNAUTHORIZED,
+                            HttpStatus.UNAUTHORIZED.series().name(),
+                            UserDTO.builder().build()
+                    ));
         }
 
-        try {
-            userService.insertUser(pDTO);
+        // JWT의 subject는 발급 시 userId로 설정되어 있음 (JwtTokenService 참조)
+        final String email = jwt.getSubject();
 
-            return MsgDTO.builder()
-                    .result(1)
-                    .msg("회원가입 성공")
-                    .build();
+        // 서비스 계층으로 조회 위임
+        UserDTO pDTO = UserDTO.builder().email(email).build();
 
-        } catch (RuntimeException e) {
+        // 존재하지 않은 경우 빈 DTO로 대체 (프런트 단계에서 null 체크 대신 빈 객체 처리 가능)
+        UserDTO user = Optional.ofNullable(userService.getUserByEmail(pDTO.email()))
+                .orElseGet(() -> UserDTO.builder().build());
 
-            if (e.getMessage().contains("이미 가입된 이메일")) {
-                return MsgDTO.builder()
-                        .result(0)
-                        .msg(e.getMessage())
-                        .code("EMAIL_DUPLICATE")
-                        .build();
-            }
-
-            return MsgDTO.builder()
-                    .result(0)
-                    .msg("회원가입 실패")
-                    .code("UNKNOWN_ERROR")
-                    .build();
-        }
-    }
-
-    @PostMapping("/checkEmail")
-    public MsgDTO checkEmail(@RequestBody UserDTO pDTO) {
-
-        log.info("{}.checkEmail Start! email: {}", this.getClass().getName(), pDTO.email());
-
-        boolean exists = userService.existsEmail(pDTO.email());
-
-        log.info("{}.checkEmail End! exists: {}", this.getClass().getName(), exists);
-
-        if (exists) {
-            return MsgDTO.builder()
-                    .result(0)
-                    .msg("이미 가입된 이메일입니다.")
-                    .code("EMAIL_DUPLICATE")
-                    .build();
-        }
-
-        return MsgDTO.builder()
-                .result(1)
-                .msg("사용 가능한 이메일입니다.")
+        UserDTO rDTO = UserDTO.builder()
+                .userId(user.userId())
+                .email(user.email())
+                .nickname(user.nickname())
+                .isActive(user.isActive())
+                .createdAt(user.createdAt())
                 .build();
+
+        log.info("{}.userInfo End! {}", getClass().getName(), rDTO);
+
+        return ResponseEntity.ok(
+                CommonResponse.of(HttpStatus.OK, HttpStatus.OK.series().name(), rDTO)
+        );
     }
 
-
-    // 🔥 이메일 인증번호 발송
-    @PostMapping("/sendCode")
-    public MsgDTO sendCode(@RequestBody MailDTO pDTO) {
-
-        if (userService.existsEmail(pDTO.email())) {
-            return MsgDTO.builder()
-                    .result(0)
-                    .msg("이미 가입된 이메일입니다.")
-                    .code("EMAIL_DUPLICATE")
-                    .build();
-        }
-
-        mailService.sendCode(pDTO.email());
-
-        return MsgDTO.builder()
-                .result(1)
-                .msg("인증번호 발송 완료")
-                .build();
-    }
-
-    // 🔥 인증번호 검증
-    @PostMapping("/verifyCode")
-    public MsgDTO verifyCode(@RequestBody MailDTO pDTO) {
-
-        boolean ok = mailService.verifyCode(pDTO.email(), pDTO.code());
-
-        if (ok) {
-            return MsgDTO.builder()
-                    .result(1)
-                    .msg("인증 성공")
-                    .build();
-        }
-
-        return MsgDTO.builder()
-                .result(0)
-                .msg("인증 실패")
-                .build();
-    }
-
-    @GetMapping("/profile")
-    public MsgDTO profile(HttpServletRequest request) {
-
-        String token = request.getHeader("Authorization");
-
-        if (token == null || !token.startsWith("Bearer ")) {
-            throw new RuntimeException("토큰 없음");
-        }
-
-        String jwt = token.substring(7);
-
-        String email = jwtUtil.getEmailFromToken(jwt);
-
-        if (email == null) {
-            throw new RuntimeException("토큰 만료 또는 위조");
-        }
-
-        UserDTO user = userService.getUserByEmail(email);
-
-        if (user == null) {
-            throw new RuntimeException("유저 없음");
-        }
-
-        return MsgDTO.builder()
-                .result(1)
-                .msg("OK")
-                .dto(user)
-                .build();
-    }
-
-    @PostMapping("/findPw")
-    public MsgDTO findPw(@RequestBody UserDTO pDTO) {
-
-        String email = pDTO.email();
-
-        if (email == null || email.isBlank()) {
-            throw new RuntimeException("이메일을 입력하세요.");
-        }
-
-        if (!userService.existsEmail(email)) {
-            throw new RuntimeException("가입되지 않은 이메일입니다.");
-        }
-
-        String token = java.util.UUID.randomUUID().toString();
-
-        mailService.saveResetToken(email, token);
-
-        String link = "http://localhost:5173/reset-pw?token=" + token;
-
-        mailService.sendResetEmail(email, link);
-
-        return MsgDTO.builder()
-                .result(1)
-                .msg("비밀번호 재설정 메일 발송 완료")
-                .build();
-    }
-
-    @PostMapping("/resetPassword")
-    public MsgDTO resetPassword(@RequestBody Map<String, String> req) {
-
-        String token = req.get("token");
-        String newPassword = req.get("newPassword");
-
-        if (token == null || newPassword == null) {
-            throw new RuntimeException("잘못된 요청입니다.");
-        }
-
-        String email = mailService.getEmailByToken(token);
-
-        if (email == null) {
-            throw new RuntimeException("유효하지 않은 토큰입니다.");
-        }
-
-        userService.updatePassword(email, newPassword);
-
-        mailService.removeToken(token);
-
-        return MsgDTO.builder()
-                .result(1)
-                .msg("비밀번호 변경 완료")
-                .build();
-    }
-
-    @GetMapping("/validateResetToken")
-    public MsgDTO validateResetToken(@RequestParam String token) {
-
-        String email = mailService.getEmailByToken(token);
-
-        if (email == null) {
-            return MsgDTO.builder()
-                    .result(0)
-                    .msg("INVALID_TOKEN")
-                    .build();
-        }
-
-        return MsgDTO.builder()
-                .result(1)
-                .msg("VALID_TOKEN")
-                .build();
-    }
-
-    @PostMapping("/refresh")
-    public MsgDTO refresh(
-            @RequestBody Map<String, String> req
-    ) {
-
-        String refreshToken =
-                req.get("refreshToken");
-
-        // 1. refreshToken 검증
-        if (!jwtUtil.isTokenValid(refreshToken)) {
-
-            return MsgDTO.builder()
-                    .result(0)
-                    .msg("INVALID_REFRESH_TOKEN")
-                    .build();
-        }
-
-        // 2. 이메일 추출
-        String email =
-                jwtUtil.getEmailFromToken(refreshToken);
-
-        // 3. Redis 저장값 조회
-        String savedToken =
-                redisTokenService.getRefreshToken(email);
-
-        // 4. Redis 비교
-        if (savedToken == null ||
-                !savedToken.equals(refreshToken)) {
-
-            return MsgDTO.builder()
-                    .result(0)
-                    .msg("INVALID_REFRESH_TOKEN")
-                    .build();
-        }
-
-        // 5. 새 AccessToken 발급
-        String newAccessToken =
-                jwtUtil.generateAccessToken(email);
-
-        return MsgDTO.builder()
-                .result(1)
-                .msg("SUCCESS")
-                .token(newAccessToken)
-                .build();
-    }
 
 }

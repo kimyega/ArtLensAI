@@ -1,68 +1,64 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-// 🌟 설정해두신 axiosInstance 경로에 맞게 임포트하세요!
-import axiosInstance from '../../api/axiosInstance.js';
+
 import './ArtLensIndex.css';
 
+import {
+    useAuth
+} from '../../context/AuthContext';
+
 const ArtLensIndex = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [userInfo, setUserInfo] = useState({ nickname: '', initial: '' });
 
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
 
-    // 1. 토큰 기반 유저 정보 조회 및 검증
-    useEffect(() => {
-        const fetchUserInfo = async () => {
-            const token = localStorage.getItem('token');
+    const {
+        isLoggedIn,
+        userInfo,
+        loading,
+        logout
+    } = useAuth();
 
-            if (!token) {
-                setIsLoggedIn(false);
-                return;
-            }
+    // 1. 로그인 사용자 정보 조회
 
-            try {
-                const response = await axiosInstance.get('/user/profile');
-
-                const nickname = response.data.dto.nickname;
-
-                setIsLoggedIn(true);
-                setUserInfo({
-                    nickname,
-                    initial: nickname?.charAt(0).toUpperCase() || 'U'
-                });
-
-            } catch (error) {
-                console.error('토큰 검증 실패:', error);
-
-                // 🔥 토큰이 invalid면 삭제
-                localStorage.removeItem('token');
-
-                setIsLoggedIn(false);
-                setUserInfo({ nickname: '', initial: '' });
-            }
-        };
-
-        fetchUserInfo();
-    }, []);
 
     // 2. 드롭다운 외부 클릭 감지
     useEffect(() => {
+
         const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(
+                    event.target
+                )
+            ) {
+
                 setIsDropdownOpen(false);
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener(
+            'mousedown',
+            handleClickOutside
+        );
 
         return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
+
+            document.removeEventListener(
+                'mousedown',
+                handleClickOutside
+            );
         };
+
     }, []);
+
+    if (loading) {
+        return null;
+    }
 
     const handleAnalyzeClick = () => {
         if (isLoggedIn) {
@@ -73,14 +69,15 @@ const ArtLensIndex = () => {
     };
 
     // 3. 로그아웃 처리
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        setIsLoggedIn(false);
-        setIsDropdownOpen(false);
-        setUserInfo({ nickname: '', initial: '' });
-        console.log('로그아웃 되었습니다.');
-        navigate('/'); // 필요시 메인으로 이동
-    };
+    const handleLogout =
+        async () => {
+
+            await logout();
+
+            setIsDropdownOpen(false);
+
+            navigate('/');
+        };
 
     const closeModal = () => setIsModalOpen(false);
 
@@ -153,7 +150,7 @@ const ArtLensIndex = () => {
                         <button className="btn btn-analyze" onClick={handleAnalyzeClick}>
                             <span>✨</span> 지금 분석하기
                         </button>
-                        <button className="btn btn-explore">
+                        <button className="btn btn-explore" onClick={() => navigate('/artist')}>
                             <span>🔍</span> 작가 탐색하기
                         </button>
                     </div>
