@@ -6,7 +6,7 @@ import java.util.List;
 
 @Builder
 public record ArtistExploreSearchDTO (
-        String keyword,
+        List<String> artistName,
 
         List<String> style,
 

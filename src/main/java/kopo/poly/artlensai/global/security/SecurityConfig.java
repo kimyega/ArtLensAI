@@ -121,8 +121,7 @@ public class SecurityConfig {
                  */
                 .authorizeHttpRequests(auth -> auth
 
-                        // 정적 리소스/루트 문서 허용
-                        // - Spring Boot 기본 정적 위치(classpath:/static 등) 아래의 파일을 직접 서비스
+                        // CORS 프리플라이트 허용
                         .requestMatchers(
                                 HttpMethod.OPTIONS,"/**"
                         )

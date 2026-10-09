@@ -10,4 +10,6 @@ import java.util.List;
 public interface IArtistExploreService {
 
     List<ArtistExploreDTO> getArtistExploreList(ArtistExploreSearchDTO pDTO);
+
+    List<String> suggestArtistNames(String keyword);
 }

@@ -38,4 +38,5 @@ out/
 .vscode/
 
 # Spring Boot 민감 환경설정
-/application-local.yml
+application-local.yml
+application-local.properties

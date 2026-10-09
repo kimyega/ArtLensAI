@@ -15,6 +15,7 @@ import {
 
 import {
     useEffect,
+    useRef,
     useState
 } from 'react';
 import axiosInstance from "../../api/axiosInstance.js";
@@ -24,7 +25,19 @@ import {FILTERS} from "../../components/data/FilterTags.js";
 const API_URL = import.meta.env.VITE_API_URL;
 import { useNavigate } from "react-router-dom";
 
+// 태그 -> 카테고리 역매핑 (자동완성 시 태그가 속한 카테고리를 찾기 위함)
+const TAG_CATEGORY_MAP = Object.entries(FILTERS)
+    .reduce((acc, [category, tags]) => {
 
+        tags.forEach(tag => {
+            acc[tag] = category;
+        });
+
+        return acc;
+
+    }, {});
+
+const ALL_TAGS = Object.values(FILTERS).flat();
 
 
 const ArtistExplore = () => {
@@ -46,7 +59,7 @@ const ArtistExplore = () => {
     const [openedCategory, setOpenedCategory] =
         useState({
 
-            STYLE: true,
+            STYLE: false,
             COLOR: false,
             LIGHTING: false,
             COMPOSITION: false,
@@ -56,8 +69,22 @@ const ArtistExplore = () => {
     const [artists, setArtists] =
         useState([]);
 
-    const [keyword, setKeyword] =
+    const [query, setQuery] =
         useState('');
+
+    const [suggestions, setSuggestions] =
+        useState([]);
+
+    const [showSuggestions, setShowSuggestions] =
+        useState(false);
+
+    const [activeSuggestionIndex, setActiveSuggestionIndex] =
+        useState(-1);
+
+    const [selectedArtistNames, setSelectedArtistNames] =
+        useState([]);
+
+    const searchBoxRef = useRef(null);
 
     const navigate = useNavigate();
 
@@ -93,15 +120,16 @@ const ArtistExplore = () => {
                     new URLSearchParams();
 
                 // =========================
-                // keyword
+                // artistName (선택된 작가 칩)
                 // =========================
-                if (keyword.trim()) {
+                selectedArtistNames
+                    .forEach(name => {
 
-                    params.append(
-                        "keyword",
-                        keyword
-                    );
-                }
+                        params.append(
+                            "artistName",
+                            name
+                        );
+                    });
 
                 // =========================
                 // STYLE
@@ -186,7 +214,7 @@ const ArtistExplore = () => {
         fetchArtists();
 
     }, [
-        keyword,
+        JSON.stringify(selectedArtistNames),
         JSON.stringify(selectedFilters)
     ]);
 
@@ -231,6 +259,190 @@ const ArtistExplore = () => {
         }));
     };
 
+    // =========================
+    // 자동완성 (태그는 로컬 사전, 작가는 서버 조회)
+    // =========================
+    useEffect(() => {
+
+        const trimmed = query.trim();
+
+        if (!trimmed) {
+
+            setSuggestions([]);
+            setShowSuggestions(false);
+            setActiveSuggestionIndex(-1);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+
+            const lower = trimmed.toLowerCase();
+
+            const tagSuggestions = ALL_TAGS
+                .filter(tag =>
+                    tag.toLowerCase().includes(lower) &&
+                    !selectedFilters[TAG_CATEGORY_MAP[tag]].includes(tag)
+                )
+                .slice(0, 5)
+                .map(tag => ({
+                    type: "TAG",
+                    value: tag,
+                    category: TAG_CATEGORY_MAP[tag]
+                }));
+
+            let artistSuggestions = [];
+
+            try {
+
+                const res = await axiosInstance.get(
+
+                    `/artist/v1/explore/suggest?keyword=${encodeURIComponent(trimmed)}`
+                );
+
+                artistSuggestions = (res.data || [])
+                    .filter(name =>
+                        !selectedArtistNames.includes(name)
+                    )
+                    .slice(0, 5)
+                    .map(name => ({
+                        type: "ARTIST",
+                        value: name
+                    }));
+
+            } catch (e) {
+
+                console.error(e);
+            }
+
+            setSuggestions([
+                ...artistSuggestions,
+                ...tagSuggestions
+            ]);
+
+            setShowSuggestions(true);
+            setActiveSuggestionIndex(-1);
+
+        }, 250);
+
+        return () => clearTimeout(timer);
+
+    }, [
+        query,
+        JSON.stringify(selectedFilters),
+        JSON.stringify(selectedArtistNames)
+    ]);
+
+    // =========================
+    // 검색창 바깥 클릭 시 자동완성 닫기
+    // =========================
+    useEffect(() => {
+
+        const handleClickOutside = (e) => {
+
+            if (
+                searchBoxRef.current &&
+                !searchBoxRef.current.contains(e.target)
+            ) {
+
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener(
+            "mousedown",
+            handleClickOutside
+        );
+
+        return () =>
+            document.removeEventListener(
+                "mousedown",
+                handleClickOutside
+            );
+
+    }, []);
+
+    const handleSelectSuggestion = (suggestion) => {
+
+        if (suggestion.type === "ARTIST") {
+
+            setSelectedArtistNames(prev =>
+
+                prev.includes(suggestion.value)
+                    ? prev
+                    : [...prev, suggestion.value]
+            );
+
+        } else {
+
+            handleFilterClick(
+                suggestion.category,
+                suggestion.value
+            );
+        }
+
+        setQuery('');
+        setSuggestions([]);
+        setShowSuggestions(false);
+        setActiveSuggestionIndex(-1);
+    };
+
+    const handleSearchKeyDown = (e) => {
+
+        if (!showSuggestions || suggestions.length === 0) {
+
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+
+            e.preventDefault();
+
+            setActiveSuggestionIndex(prev =>
+                (prev + 1) % suggestions.length
+            );
+
+        } else if (e.key === 'ArrowUp') {
+
+            e.preventDefault();
+
+            setActiveSuggestionIndex(prev =>
+                (prev - 1 + suggestions.length) % suggestions.length
+            );
+
+        } else if (e.key === 'Enter') {
+
+            if (activeSuggestionIndex >= 0) {
+
+                e.preventDefault();
+
+                handleSelectSuggestion(
+                    suggestions[activeSuggestionIndex]
+                );
+            }
+
+        } else if (e.key === 'Escape') {
+
+            setShowSuggestions(false);
+            setActiveSuggestionIndex(-1);
+        }
+    };
+
+    const handleRemoveArtistChip = (name) => {
+
+        setSelectedArtistNames(prev =>
+            prev.filter(n => n !== name)
+        );
+    };
+
+    const selectedTagChips =
+        Object.entries(selectedFilters)
+            .flatMap(([category, tags]) =>
+                tags.map(tag => ({
+                    category,
+                    tag
+                }))
+            );
+
     return (
 
         <div className="artist-explore-page">
@@ -270,106 +482,222 @@ const ArtistExplore = () => {
                 {/* SEARCH */}
                 <div className="artist-explore-search-filter-bar">
 
-                    <div className="artist-explore-search-box">
+                    <div
+                        className="artist-explore-search-box-wrapper"
+                        ref={searchBoxRef}
+                    >
 
-                        <Search
-                            size={20}
-                            className="artist-explore-search-icon"
-                        />
+                        <div className="artist-explore-search-box">
 
-                        <input
-                            type="text"
-                            className="artist-explore-search-input"
-                            placeholder="작가 이름 또는 화풍 태그 검색"
-                            value={keyword}
-                            onChange={(e) =>
-                                setKeyword(e.target.value)
-                            }
-                        />
+                            <Search
+                                size={20}
+                                className="artist-explore-search-icon"
+                            />
+
+                            {selectedArtistNames.map((name) => (
+
+                                <div
+                                    key={`artist-${name}`}
+                                    className="artist-explore-search-chip artist"
+                                >
+
+                                    {name}
+
+                                    <X
+                                        size={14}
+                                        onClick={() =>
+                                            handleRemoveArtistChip(name)
+                                        }
+                                    />
+
+                                </div>
+                            ))}
+
+                            {selectedTagChips.map(
+                                ({category, tag}) => (
+
+                                    <div
+                                        key={`tag-${category}-${tag}`}
+                                        className="artist-explore-search-chip tag"
+                                    >
+
+                                        #{tag}
+
+                                        <X
+                                            size={14}
+                                            onClick={() =>
+                                                handleFilterClick(
+                                                    category,
+                                                    tag
+                                                )
+                                            }
+                                        />
+
+                                    </div>
+                                )
+                            )}
+
+                            <input
+                                type="text"
+                                className="artist-explore-search-input"
+                                placeholder={
+                                    selectedArtistNames.length > 0 ||
+                                    selectedTagChips.length > 0
+                                        ? ""
+                                        : "작가 이름 또는 화풍 태그 검색"
+                                }
+                                value={query}
+                                onChange={(e) =>
+                                    setQuery(e.target.value)
+                                }
+                                onKeyDown={handleSearchKeyDown}
+                                onFocus={() => {
+
+                                    if (suggestions.length > 0) {
+
+                                        setShowSuggestions(true);
+                                    }
+                                }}
+                            />
+
+                        </div>
+
+                        {showSuggestions &&
+                            suggestions.length > 0 && (
+
+                            <ul className="artist-explore-suggestions">
+
+                                {suggestions.map((s, index) => (
+
+                                    <li
+                                        key={`${s.type}-${s.value}`}
+                                        className={`artist-explore-suggestion-item ${
+                                            index === activeSuggestionIndex
+                                                ? 'active'
+                                                : ''
+                                        }`}
+                                        onMouseEnter={() =>
+                                            setActiveSuggestionIndex(index)
+                                        }
+                                        onClick={() =>
+                                            handleSelectSuggestion(s)
+                                        }
+                                    >
+
+                                        <span
+                                            className={`artist-explore-suggestion-type ${
+                                                s.type === "ARTIST"
+                                                    ? "artist"
+                                                    : "tag"
+                                            }`}
+                                        >
+                                            {s.type === "ARTIST"
+                                                ? "작가"
+                                                : "태그"}
+                                        </span>
+
+                                        <span className="artist-explore-suggestion-value">
+                                            {s.type === "ARTIST"
+                                                ? s.value
+                                                : `#${s.value}`}
+                                        </span>
+
+                                    </li>
+                                ))}
+
+                            </ul>
+                        )}
 
                     </div>
 
                     <div className="artist-explore-filter-groups">
 
-                        {Object.entries(FILTERS).map(
+                        <div className="artist-explore-filter-category-row">
 
-                            ([category, tags]) => (
+                            {Object.entries(FILTERS).map(
 
-                                <div
-                                    key={category}
-                                    className="artist-explore-filter-group"
-                                >
+                                ([category, tags]) => {
 
-                                    <div
-                                        className="artist-explore-filter-header"
-                                        onClick={() =>
-                                            toggleCategory(category)
-                                        }
-                                    >
+                                    const count =
+                                        selectedFilters[category].length;
 
-                                        <h4 className="artist-explore-filter-category">
+                                    return (
+
+                                        <button
+                                            key={category}
+                                            type="button"
+                                            className={`artist-explore-filter-chip ${
+                                                openedCategory[category]
+                                                    ? 'open'
+                                                    : ''
+                                            } ${
+                                                count > 0
+                                                    ? 'has-selection'
+                                                    : ''
+                                            }`}
+                                            onClick={() =>
+                                                toggleCategory(category)
+                                            }
+                                        >
 
                                             {category}
 
-                                        </h4>
+                                            {count > 0 && (
+                                                <span className="artist-explore-filter-count">
+                                                    {count}
+                                                </span>
+                                            )}
 
-                                        <span>
+                                        </button>
+                                    );
+                                }
+                            )}
 
-            {
-                openedCategory[
-                    category
-                    ]
+                        </div>
 
-                    ? '−'
-                    : '+'
-            }
+                        {Object.entries(FILTERS).map(
 
-        </span>
+                            ([category, tags]) =>
+
+                                openedCategory[category] && (
+
+                                    <div
+                                        key={category}
+                                        className="artist-explore-filter-tags"
+                                    >
+
+                                        {tags.map(tag => {
+
+                                            const isActive =
+                                                selectedFilters[
+                                                    category
+                                                    ].includes(tag);
+
+                                            return (
+
+                                                <div
+                                                    key={tag}
+                                                    className={`artist-explore-filter-tag ${
+                                                        isActive
+                                                            ? 'active'
+                                                            : ''
+                                                    }`}
+                                                    onClick={() =>
+                                                        handleFilterClick(
+                                                            category,
+                                                            tag
+                                                        )
+                                                    }
+                                                >
+
+                                                    #{tag}
+
+                                                </div>
+                                            );
+                                        })}
 
                                     </div>
-
-                                    {openedCategory[
-                                        category
-                                        ] && (
-
-                                        <div className="artist-explore-filter-tags">
-
-                                            {tags.map(tag => {
-
-                                                const isActive =
-                                                    selectedFilters[
-                                                        category
-                                                        ].includes(tag);
-
-                                                return (
-
-                                                    <div
-                                                        key={tag}
-                                                        className={`artist-explore-filter-tag ${
-                                                            isActive
-                                                                ? 'active'
-                                                                : ''
-                                                        }`}
-                                                        onClick={() =>
-                                                            handleFilterClick(
-                                                                category,
-                                                                tag
-                                                            )
-                                                        }
-                                                    >
-
-                                                        #{tag}
-
-                                                    </div>
-                                                );
-                                            })}
-
-                                        </div>
-                                    )}
-
-                                </div>
-
-                            )
+                                )
                         )}
 
                     </div>

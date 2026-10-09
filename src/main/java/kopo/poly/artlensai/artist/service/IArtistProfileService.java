@@ -5,4 +5,6 @@ import kopo.poly.artlensai.analysis.dto.ArtistStyleProfileDTO;
 public interface IArtistProfileService {
 
     void saveProfile(ArtistStyleProfileDTO pDTO);
+
+    void reindexAll();
 }
