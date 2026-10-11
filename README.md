@@ -5,6 +5,8 @@
 
 🔗 **배포 주소**: [artlensai.kr](https://artlensai.kr)
 
+![demo](docs/images/demo.gif)
+
 ## 프로젝트 소개
 
 Safebooru 기반 일러스트레이터 데이터를 CLIP 임베딩으로 분석해, 사용자가 업로드한
@@ -24,6 +26,16 @@ Safebooru 기반 일러스트레이터 데이터를 CLIP 임베딩으로 분석�
 - **취향 화풍 테스트**: 질문에 답하며 내 화풍 취향에 가까운 작가 찾기
 - **분석결과 공유**: 공개 링크 발급, 카카오톡/페이스북/네이버로 공유
 - **분석 히스토리**: 과거 분석 결과 모아보고 관리
+
+## 스크린샷
+
+| Style Map | 작가 상세 분석 |
+|---|---|
+| ![style-map](docs/images/style-map.png) | ![artist-detail](docs/images/artist-detail.png) |
+
+| 취향 화풍 테스트 |
+|---|
+| ![taste-test](docs/images/taste-test.png) |
 
 ## 기술 스택
 
