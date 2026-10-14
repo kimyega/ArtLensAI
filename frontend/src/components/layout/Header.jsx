@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Link,
     useLocation,
@@ -11,6 +11,8 @@ import axiosInstance from '../../api/axiosInstance';
 import {
     useAuth
 } from '../../context/AuthContext';
+
+import LoginRequiredModal from '../common/LoginRequiredModal.jsx';
 
 const Header = () => {
 
@@ -32,6 +34,19 @@ const Header = () => {
         logout
     } = useAuth();
 
+    const [showLoginModal, setShowLoginModal] = useState(false);
+
+    // 비로그인 상태에서 로그인 필요한 메뉴 클릭 시, 이동 대신 로그인 모달을 띄움
+    const handleNavClick = (e) => {
+
+        if (!isLoggedIn) {
+
+            e.preventDefault();
+
+            setShowLoginModal(true);
+        }
+    };
+
     const handleLogout =
         async () => {
 
@@ -41,6 +56,7 @@ const Header = () => {
         };
 
     return (
+        <>
         <header className="navbar">
 
             <Link
@@ -57,6 +73,7 @@ const Header = () => {
                     <Link
                         to="/analysis"
                         className={isActive('/analysis')}
+                        onClick={handleNavClick}
                     >
                         이미지 분석
                     </Link>
@@ -66,6 +83,7 @@ const Header = () => {
                     <Link
                         to="/style-map"
                         className={isActive('/style-map')}
+                        onClick={handleNavClick}
                     >
                         Style Map
                         <span className="badge-new">
@@ -78,8 +96,9 @@ const Header = () => {
                     <Link
                         to="/taste-test"
                         className={isActive('/taste-test')}
+                        onClick={handleNavClick}
                     >
-                        취향 테스트
+                        취향 화풍 테스트
                     </Link>
                 </li>
 
@@ -87,6 +106,7 @@ const Header = () => {
                     <Link
                         to="/artist"
                         className={isActive('/artist')}
+                        onClick={handleNavClick}
                     >
                         작가 탐색
                     </Link>
@@ -95,6 +115,7 @@ const Header = () => {
                 <li>
                     <Link
                         to="/history"
+                        onClick={handleNavClick}
                         className={isActive('/history')}
                     >
                         분석 기록
@@ -168,6 +189,12 @@ const Header = () => {
             )}
 
         </header>
+
+        <LoginRequiredModal
+            isOpen={showLoginModal}
+            onClose={() => setShowLoginModal(false)}
+        />
+        </>
     );
 };
 

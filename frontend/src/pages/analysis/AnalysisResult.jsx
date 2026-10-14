@@ -2,6 +2,7 @@
 
 import {
     Compass,
+    Eye,
     Share2
 } from 'lucide-react';
 
@@ -32,6 +33,8 @@ const AnalysisResultPage = () => {
     const [result, setResult] = useState(null);
 
     const [loading, setLoading] = useState(true);
+
+    const [shareInfo, setShareInfo] = useState(null);
 
     useEffect(() => {
 
@@ -184,10 +187,16 @@ const AnalysisResultPage = () => {
                         title={result.title}
                         imgUrl={`${API_URL}/analysis/v1/api/image/${result.imgKey}`}
                         className="analysis-btn analysis-btn-outline"
+                        onShareChange={setShareInfo}
                     >
                         <Share2 size={16} />
                         공유하기
                     </ShareButton>
+
+                    <span className="analysis-view-count">
+                        <Eye size={16} />
+                        {shareInfo?.viewCount ?? 0}
+                    </span>
                 </>
             }
         />

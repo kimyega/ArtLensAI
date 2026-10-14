@@ -12,7 +12,8 @@ const ShareButton = ({
     stopPropagation,
     disabled,
     className,
-    children
+    children,
+    onShareChange
 }) => {
 
     const {
@@ -28,7 +29,7 @@ const ShareButton = ({
         handleFacebookShare,
         handleXShare,
         handleRevokeShare
-    } = useShare({ resultId, title, imgUrl, initialShare, skipInitialFetch });
+    } = useShare({ resultId, title, imgUrl, initialShare, skipInitialFetch, onShareChange });
 
     const handleClick = (e) => {
 

@@ -146,6 +146,10 @@
     gap: 4px;
 }
 
+.analysis-history-view-count {
+    margin-left: auto;
+}
+
 .analysis-history-card-title {
     font-size: 16px;
     font-weight: 700;

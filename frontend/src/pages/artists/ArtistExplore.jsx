@@ -165,7 +165,7 @@ const ArtistExplore = () => {
                 const res = await axiosInstance.get("/like/v1/artists");
 
                 setLikedArtistIds(
-                    new Set(res.data.artistIds)
+                    new Set(res.data.data.artistIds)
                 );
 
             } catch (e) {
@@ -195,13 +195,13 @@ const ArtistExplore = () => {
                 const res = await axiosInstance.get("/recommend/v1/artists");
 
                 const byArtistId = new Map(
-                    res.data.items.map(item => [item.artistId, item])
+                    res.data.data.items.map(item => [item.artistId, item])
                 );
 
                 setRecommendMeta({
-                    source: res.data.source,
+                    source: res.data.data.source,
                     byArtistId,
-                    order: res.data.items.map(item => item.artistId)
+                    order: res.data.data.items.map(item => item.artistId)
                 });
 
                 setRecommendLoaded(true);

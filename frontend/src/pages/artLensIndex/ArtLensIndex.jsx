@@ -8,6 +8,8 @@ import {
     useAuth
 } from '../../context/AuthContext';
 
+import LoginRequiredModal from '../../components/common/LoginRequiredModal.jsx';
+
 const ArtLensIndex = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -80,10 +82,6 @@ const ArtLensIndex = () => {
         };
 
     const closeModal = () => setIsModalOpen(false);
-
-    const handleOverlayClick = (e) => {
-        if (e.target === e.currentTarget) closeModal();
-    };
 
     return (
         <motion.div
@@ -158,20 +156,11 @@ const ArtLensIndex = () => {
                 <div className="scroll-indicator">SCROLL TO EXPLORE</div>
             </div>
 
-            <div className={`modal-overlay ${isModalOpen ? 'active' : ''}`} onClick={handleOverlayClick}>
-                <div className="modal-content">
-                    <button className="btn-close" onClick={closeModal}>×</button>
-                    <span className="modal-icon">🔐</span>
-                    <h2 className="modal-title">로그인이 필요합니다</h2>
-                    <p className="modal-sub">AI 화풍 분석을 시작하고 당신의 예술적 여정을 기록하려면 로그인해 주세요.</p>
-                    <Link to="/login" className="btn-modal-login">
-                        <span>🎨</span> ArtLens ai 로그인하기
-                    </Link>
-                    <div className="modal-footer">
-                        아직 계정이 없으신가요? <Link to="/signup">회원가입</Link>
-                    </div>
-                </div>
-            </div>
+            <LoginRequiredModal
+                isOpen={isModalOpen}
+                onClose={closeModal}
+                message="AI 화풍 분석을 시작하고 당신의 예술적 여정을 기록하려면 로그인해 주세요."
+            />
         </motion.div>
     );
 };

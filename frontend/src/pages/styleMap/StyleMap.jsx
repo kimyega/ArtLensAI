@@ -146,7 +146,7 @@ const StyleMap = () => {
     const loadLikedArtists = async () => {
         try {
             const response = await axiosInstance.get("/like/v1/artists");
-            setLikedArtistIds(new Set(response.data.artistIds.map(String)));
+            setLikedArtistIds(new Set(response.data.data.artistIds.map(String)));
         } catch (e) {
             console.log(e);
         }
@@ -747,7 +747,7 @@ const StyleMap = () => {
                                     </span>
                                 </div>
 
-                                {selectedHistory.top5.map((artist, idx) => {
+                                {selectedHistory.top5?.map((artist, idx) => {
 
                                     const imagePath =
                                         artist.profileImg

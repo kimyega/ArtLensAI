@@ -8,6 +8,7 @@
     --white: #FFFFFF;
     --text-sub: #94A3B8;
     --border: rgba(255, 255, 255, 0.08);
+    --error: #F87171;
     --kakao: #FEE500;
     --kakao-text: #191919;
 }
@@ -122,6 +123,12 @@
     background: rgba(255, 255, 255, 0.08);
     box-shadow: 0 0 0 4px rgba(74, 173, 223, 0.15);
 }
+.form-input.error {
+    border-color: var(--error) !important;
+    box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.15) !important;
+}
+
+.error-text { color: var(--error); font-size: 12px; margin-top: 6px; margin-left: 4px; font-weight: 500; }
 
 .btn-login {
     width: 100%;

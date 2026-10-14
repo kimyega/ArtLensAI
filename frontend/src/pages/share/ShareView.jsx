@@ -29,7 +29,7 @@ const ShareView = () => {
                         `/share/v1/${token}`
                     );
 
-                setResult(res.data);
+                setResult(res.data.data);
 
             } catch (e) {
 

@@ -87,10 +87,10 @@ const TasteTest = () => {
 
             const res = await axiosInstance.post("/taste-test/v1/start");
 
-            setTestId(res.data.testId);
-            setQuestionNo(res.data.questionNo);
-            setTotalQuestions(res.data.totalQuestions);
-            setOptions(res.data.options);
+            setTestId(res.data.data.testId);
+            setQuestionNo(res.data.data.questionNo);
+            setTotalQuestions(res.data.data.totalQuestions);
+            setOptions(res.data.data.options);
             setPhase('question');
 
         } catch (e) {
@@ -130,15 +130,15 @@ const TasteTest = () => {
             // 선택 카드 이펙트를 충분히 보여준 뒤 다음 질문으로 넘어감
             await new Promise(resolve => setTimeout(resolve, 650));
 
-            if (res.data.finished) {
+            if (res.data.data.finished) {
 
-                setResult(res.data);
+                setResult(res.data.data);
                 setPhase('finished');
 
             } else {
 
-                setQuestionNo(res.data.questionNo);
-                setOptions(res.data.options);
+                setQuestionNo(res.data.data.questionNo);
+                setOptions(res.data.data.options);
             }
 
         } catch (e) {

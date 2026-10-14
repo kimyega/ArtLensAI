@@ -13,7 +13,8 @@ export function useShare({
     title,
     imgUrl,
     initialShare = null,
-    skipInitialFetch = false
+    skipInitialFetch = false,
+    onShareChange
 }) {
 
     const [share, setShare] = useState(initialShare);
@@ -21,6 +22,13 @@ export function useShare({
     const [shareModalOpen, setShareModalOpen] = useState(false);
 
     const [copySuccess, setCopySuccess] = useState(false);
+
+    // 조회수 등 share 정보가 필요한 부모 컴포넌트에 변경사항을 알려줌
+    useEffect(() => {
+
+        onShareChange?.(share);
+
+    }, [share]);
 
     const shareTitle =
         title
@@ -56,9 +64,9 @@ export function useShare({
                         { params: { resultId } }
                     );
 
-                if (res.data) {
+                if (res.data?.data) {
 
-                    setShare(res.data);
+                    setShare(res.data.data);
                 }
 
             } catch (e) {
@@ -85,7 +93,7 @@ export function useShare({
                         { resultId }
                     );
 
-                current = res.data;
+                current = res.data.data;
 
                 setShare(current);
 

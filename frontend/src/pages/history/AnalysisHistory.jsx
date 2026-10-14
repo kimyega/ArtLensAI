@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Calendar, ArrowRight, Share2, X, Trash2, CheckSquare, Square } from "lucide-react";
+import { Search, Calendar, Eye, ArrowRight, Share2, X, Trash2, CheckSquare, Square } from "lucide-react";
 import axiosInstance from "../../api/axiosInstance";
 import ShareButton from "../../components/share/ShareButton.jsx";
 import "./AnalysisHistory.css";
@@ -53,7 +53,7 @@ const AnalysisHistory = () => {
 
         axiosInstance.get(`/share/v1/mine/batch?${params.toString()}`)
             .then(res => {
-                setSharesByResultId(res.data || {});
+                setSharesByResultId(res.data.data || {});
             })
             .catch(err => {
                 console.error("🚨 공유 상태 조회 실패:", err);
@@ -367,6 +367,11 @@ const AnalysisHistory = () => {
                                                 </div>
                                             )}
                                         </div>
+
+                                        <span className="analysis-history-meta-item analysis-history-view-count">
+                                            <Eye size={12} />
+                                            {sharesByResultId[item.id]?.viewCount ?? 0}
+                                        </span>
                                     </div>
                                     <h3 className="analysis-history-card-title">{item.title}</h3>
 

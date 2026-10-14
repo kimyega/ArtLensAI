@@ -24,7 +24,9 @@ function AnimatedRoutes() {
 
     // 헤더를 숨기고 싶은 경로 (예: 로그인, 회원가입)
     const hideHeaderPaths = ['/', '/login', '/signup', '/find-pw', '/reset-pw', '/reset-suc', '/reset-exp'];
-    const shouldShowHeader = !hideHeaderPaths.includes(location.pathname);
+    const shouldShowHeader =
+        !hideHeaderPaths.includes(location.pathname) &&
+        !location.pathname.startsWith('/share/');
     return (
         <>
             {shouldShowHeader && <Header />}
