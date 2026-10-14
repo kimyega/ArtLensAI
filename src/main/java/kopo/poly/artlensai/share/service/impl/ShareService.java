@@ -7,15 +7,15 @@ import kopo.poly.artlensai.share.domain.postgres.ShareLinkRepository;
 import kopo.poly.artlensai.share.domain.postgres.entity.ShareLinkEntity;
 import kopo.poly.artlensai.share.dto.ShareLinkDTO;
 import kopo.poly.artlensai.share.dto.SharedAnalysisResultDTO;
-import kopo.poly.artlensai.share.exception.ShareAccessDeniedException;
-import kopo.poly.artlensai.share.exception.ShareNotFoundException;
 import kopo.poly.artlensai.share.service.IShareService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,13 +44,18 @@ public class ShareService implements IShareService {
     @Transactional
     public ShareLinkDTO createOrGetShare(Long userId, String resultId, Integer expiresInDays) {
 
+        log.info("{}.createOrGetShare Start! userId={}, resultId={}, expiresInDays={}",
+                getClass().getName(), userId, resultId, expiresInDays);
+
         AnalysisResultsDocument doc =
                 analysisResultsRepository.findById(resultId)
-                        .orElseThrow(ShareNotFoundException::new);
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "공유 링크를 찾을 수 없습니다."));
 
         if (!doc.getUserId().equals(userId)) {
 
-            throw new ShareAccessDeniedException();
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "본인의 분석 결과만 공유할 수 있습니다.");
         }
 
         Optional<ShareLinkEntity> existing =
@@ -62,10 +67,14 @@ public class ShareService implements IShareService {
 
             if (!isExpired(entity)) {
 
-                return toDTO(entity);
+                ShareLinkDTO result = ShareLinkDTO.from(entity, frontendUrl, resolveViewCount(entity));
+
+                log.info("{}.createOrGetShare End! (existing) {}", getClass().getName(), result);
+
+                return result;
             }
 
-            entity.setIsPublic(false);
+            entity.revoke();
             shareLinkRepository.save(entity);
         }
 
@@ -84,53 +93,83 @@ public class ShareService implements IShareService {
 
         ShareLinkEntity saved = shareLinkRepository.save(entity);
 
-        return toDTO(saved);
+        ShareLinkDTO result = ShareLinkDTO.from(saved, frontendUrl, resolveViewCount(saved));
+
+        log.info("{}.createOrGetShare End! (created) {}", getClass().getName(), result);
+
+        return result;
     }
 
     @Override
     public Optional<ShareLinkDTO> getMyShare(Long userId, String resultId) {
 
-        return shareLinkRepository.findByResultIdAndUserIdAndIsPublicTrue(resultId, userId)
+        log.info("{}.getMyShare Start! userId={}, resultId={}", getClass().getName(), userId, resultId);
+
+        Optional<ShareLinkDTO> result = shareLinkRepository.findByResultIdAndUserIdAndIsPublicTrue(resultId, userId)
                 .filter(entity -> !isExpired(entity))
-                .map(this::toDTO);
+                .map(entity -> ShareLinkDTO.from(entity, frontendUrl, resolveViewCount(entity)));
+
+        log.info("{}.getMyShare End! present={}", getClass().getName(), result.isPresent());
+
+        return result;
     }
 
     @Override
     public Map<String, ShareLinkDTO> getMyShares(Long userId, List<String> resultIds) {
 
+        log.info("{}.getMyShares Start! userId={}, resultIdCount={}",
+                getClass().getName(), userId, resultIds == null ? 0 : resultIds.size());
+
         if (resultIds == null || resultIds.isEmpty()) {
+
+            log.info("{}.getMyShares End! (empty request)", getClass().getName());
 
             return Map.of();
         }
 
-        return shareLinkRepository.findByResultIdInAndUserIdAndIsPublicTrue(resultIds, userId)
+        Map<String, ShareLinkDTO> result = shareLinkRepository.findByResultIdInAndUserIdAndIsPublicTrue(resultIds, userId)
                 .stream()
                 .filter(entity -> !isExpired(entity))
-                .collect(Collectors.toMap(ShareLinkEntity::getResultId, this::toDTO));
+                .collect(Collectors.toMap(
+                        ShareLinkEntity::getResultId,
+                        entity -> ShareLinkDTO.from(entity, frontendUrl, resolveViewCount(entity))
+                ));
+
+        log.info("{}.getMyShares End! resultCount={}", getClass().getName(), result.size());
+
+        return result;
     }
 
     @Override
     public void revoke(Long userId, Long shareId) {
 
+        log.info("{}.revoke Start! userId={}, shareId={}", getClass().getName(), userId, shareId);
+
         ShareLinkEntity entity =
                 shareLinkRepository.findByShareIdAndUserId(shareId, userId)
-                        .orElseThrow(ShareNotFoundException::new);
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "공유 링크를 찾을 수 없습니다."));
 
-        entity.setIsPublic(false);
+        entity.revoke();
 
         shareLinkRepository.save(entity);
+
+        log.info("{}.revoke End!", getClass().getName());
     }
 
     @Override
     public SharedAnalysisResultDTO getPublicResult(String token) {
 
+        log.info("{}.getPublicResult Start! token={}", getClass().getName(), token);
+
         ShareLinkEntity entity =
                 shareLinkRepository.findByToken(token)
-                        .orElseThrow(ShareNotFoundException::new);
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "공유 링크를 찾을 수 없습니다."));
 
         if (!Boolean.TRUE.equals(entity.getIsPublic()) || isExpired(entity)) {
 
-            throw new ShareNotFoundException();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "공유 링크를 찾을 수 없습니다.");
         }
 
         redisTemplate.opsForValue().increment("share-view:" + token);
@@ -138,16 +177,11 @@ public class ShareService implements IShareService {
         AnalysisResultsDocument doc =
                 analysisService.getAnalysisResult(entity.getResultId());
 
-        return SharedAnalysisResultDTO.builder()
-                .imgKey(doc.getImgKey())
-                .title(doc.getTitle())
-                .comment(doc.getComment())
-                .tags(doc.getTags())
-                .palette(doc.getPalette())
-                .top5(doc.getTop5())
-                .styleMap(doc.getStyleMap())
-                .createdAt(doc.getCreatedAt())
-                .build();
+        SharedAnalysisResultDTO result = SharedAnalysisResultDTO.from(doc);
+
+        log.info("{}.getPublicResult End! resultId={}", getClass().getName(), entity.getResultId());
+
+        return result;
     }
 
     private boolean isExpired(ShareLinkEntity entity) {
@@ -156,16 +190,16 @@ public class ShareService implements IShareService {
                 && entity.getExpiresAt().isBefore(LocalDateTime.now());
     }
 
-    private ShareLinkDTO toDTO(ShareLinkEntity entity) {
+    /**
+     * DB에 반영된 viewCount + Redis에 아직 배치(ShareViewFlushJob)로 반영되지 않은 증가분을 합쳐서,
+     * 5분 배치 지연 없이 항상 최신 조회수를 보여준다.
+     */
+    private long resolveViewCount(ShareLinkEntity entity) {
 
-        return ShareLinkDTO.builder()
-                .shareId(entity.getShareId())
-                .token(entity.getToken())
-                .shareUrl(frontendUrl + "/share/" + entity.getToken())
-                .isPublic(entity.getIsPublic())
-                .expiresAt(entity.getExpiresAt())
-                .viewCount(entity.getViewCount())
-                .createdAt(entity.getCreatedAt())
-                .build();
+        Object pending = redisTemplate.opsForValue().get("share-view:" + entity.getToken());
+
+        long pendingCount = pending != null ? Long.parseLong(pending.toString()) : 0L;
+
+        return entity.getViewCount() + pendingCount;
     }
 }

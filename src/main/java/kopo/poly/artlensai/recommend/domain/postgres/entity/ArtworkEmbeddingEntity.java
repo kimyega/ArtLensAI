@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "artwork_embeddings")
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

@@ -11,7 +11,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 /**
  * 취향 벡터가 바뀐 "후" 추천 캐시를 지운다.
  * @Transactional 메서드 안에서 즉시 delete하면 DB 커밋 전에 캐시가 비워져,
- * 그 틈에 들어온 추천 요청이 구(舊) 취향벡터로 재계산해 다시 캐싱해버리는 레이스가 생긴다.
+ * 그 틈에 들어온 추천 요청이 예전 취향벡터로 재계산해 다시 캐싱해버리는 레이스가 생긴다.
  * 그래서 AFTER_COMMIT 시점에만 캐시를 지운다.
  */
 @Slf4j

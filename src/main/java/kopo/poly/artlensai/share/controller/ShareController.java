@@ -1,10 +1,9 @@
 package kopo.poly.artlensai.share.controller;
 
+import kopo.poly.artlensai.global.response.CommonResponse;
 import kopo.poly.artlensai.share.dto.CreateShareRequestDTO;
 import kopo.poly.artlensai.share.dto.ShareLinkDTO;
 import kopo.poly.artlensai.share.dto.SharedAnalysisResultDTO;
-import kopo.poly.artlensai.share.exception.ShareAccessDeniedException;
-import kopo.poly.artlensai.share.exception.ShareNotFoundException;
 import kopo.poly.artlensai.share.service.IShareService;
 import kopo.poly.artlensai.user.dto.UserDTO;
 import kopo.poly.artlensai.user.service.IUserService;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -40,28 +40,18 @@ public class ShareController {
 
     ) {
 
-        if (jwt == null) {
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        log.info("{}.createShare Start! resultId={}", getClass().getName(), req.resultId());
 
         UserDTO user = userService.getUserByEmail(jwt.getSubject());
 
-        try {
+        ShareLinkDTO result =
+                shareService.createOrGetShare(user.userId(), req.resultId(), req.expiresInDays());
 
-            ShareLinkDTO result =
-                    shareService.createOrGetShare(user.userId(), req.resultId(), req.expiresInDays());
+        log.info("{}.createShare End! {}", getClass().getName(), result);
 
-            return ResponseEntity.ok(result);
-
-        } catch (ShareAccessDeniedException e) {
-
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-
-        } catch (ShareNotFoundException e) {
-
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(
+                CommonResponse.of(HttpStatus.OK, HttpStatus.OK.series().name(), result)
+        );
     }
 
     @GetMapping("/mine")
@@ -75,16 +65,22 @@ public class ShareController {
 
     ) {
 
-        if (jwt == null) {
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        log.info("{}.getMyShare Start! resultId={}", getClass().getName(), resultId);
 
         UserDTO user = userService.getUserByEmail(jwt.getSubject());
 
-        return shareService.getMyShare(user.userId(), resultId)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.noContent().build());
+        Optional<ShareLinkDTO> result = shareService.getMyShare(user.userId(), resultId);
+
+        log.info("{}.getMyShare End! present={}", getClass().getName(), result.isPresent());
+
+        if (result.isEmpty()) {
+
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(
+                CommonResponse.of(HttpStatus.OK, HttpStatus.OK.series().name(), result.get())
+        );
     }
 
     @GetMapping("/mine/batch")
@@ -98,16 +94,17 @@ public class ShareController {
 
     ) {
 
-        if (jwt == null) {
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        log.info("{}.getMyShares Start! resultIdCount={}", getClass().getName(), resultIds.size());
 
         UserDTO user = userService.getUserByEmail(jwt.getSubject());
 
         Map<String, ShareLinkDTO> result = shareService.getMyShares(user.userId(), resultIds);
 
-        return ResponseEntity.ok(result);
+        log.info("{}.getMyShares End! resultCount={}", getClass().getName(), result.size());
+
+        return ResponseEntity.ok(
+                CommonResponse.of(HttpStatus.OK, HttpStatus.OK.series().name(), result)
+        );
     }
 
     @DeleteMapping("/{shareId}")
@@ -121,23 +118,15 @@ public class ShareController {
 
     ) {
 
-        if (jwt == null) {
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        log.info("{}.revoke Start! shareId={}", getClass().getName(), shareId);
 
         UserDTO user = userService.getUserByEmail(jwt.getSubject());
 
-        try {
+        shareService.revoke(user.userId(), shareId);
 
-            shareService.revoke(user.userId(), shareId);
+        log.info("{}.revoke End! shareId={}", getClass().getName(), shareId);
 
-            return ResponseEntity.noContent().build();
-
-        } catch (ShareNotFoundException e) {
-
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{token}")
@@ -148,15 +137,14 @@ public class ShareController {
 
     ) {
 
-        try {
+        log.info("{}.getPublicResult Start! token={}", getClass().getName(), token);
 
-            SharedAnalysisResultDTO result = shareService.getPublicResult(token);
+        SharedAnalysisResultDTO result = shareService.getPublicResult(token);
 
-            return ResponseEntity.ok(result);
+        log.info("{}.getPublicResult End! {}", getClass().getName(), result);
 
-        } catch (ShareNotFoundException e) {
-
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(
+                CommonResponse.of(HttpStatus.OK, HttpStatus.OK.series().name(), result)
+        );
     }
 }

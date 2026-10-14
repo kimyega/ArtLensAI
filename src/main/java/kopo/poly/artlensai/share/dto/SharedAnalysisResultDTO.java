@@ -4,6 +4,7 @@ import kopo.poly.artlensai.analysis.dto.ArtistResultDTO;
 import kopo.poly.artlensai.analysis.dto.PaletteDTO;
 import kopo.poly.artlensai.analysis.dto.StyleMapDTO;
 import kopo.poly.artlensai.analysis.dto.TagResultDTO;
+import kopo.poly.artlensai.analysis.repository.mongo.document.AnalysisResultsDocument;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -32,4 +33,21 @@ public record SharedAnalysisResultDTO(
         LocalDateTime createdAt
 
 ) {
+
+        /**
+         * MongoDB로 전달받은 document 결과를 DTO로 반환하기
+         */
+        public static SharedAnalysisResultDTO from(AnalysisResultsDocument doc) {
+
+                return SharedAnalysisResultDTO.builder()
+                        .imgKey(doc.getImgKey())
+                        .title(doc.getTitle())
+                        .comment(doc.getComment())
+                        .tags(doc.getTags())
+                        .palette(doc.getPalette())
+                        .top5(doc.getTop5())
+                        .styleMap(doc.getStyleMap())
+                        .createdAt(doc.getCreatedAt())
+                        .build();
+        }
 }

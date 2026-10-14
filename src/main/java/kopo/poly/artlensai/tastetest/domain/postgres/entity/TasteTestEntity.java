@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "taste_tests")
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,4 +34,10 @@ public class TasteTestEntity {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    public void applyResult(float[] tasteVect, String clusterLabel) {
+
+        this.tasteVect = tasteVect;
+        this.clusterLabel = clusterLabel;
+    }
 }

@@ -7,7 +7,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import kopo.poly.artlensai.artist.dto.ArtistExploreDTO;
 import kopo.poly.artlensai.artist.dto.ArtistExploreSearchDTO;
-import kopo.poly.artlensai.artist.repository.elasticsearch.document.ArtistSearchDocument;
+import kopo.poly.artlensai.artist.domain.elasticsearch.document.ArtistSearchDocument;
 import kopo.poly.artlensai.artist.service.IArtistExploreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,15 +58,24 @@ public class ArtistExploreService
                         .withMaxResults(200)
                         .build();
 
-        List<ArtistSearchDocument> docs =
-                elasticsearchOperations
-                        .search(
-                                nativeQuery,
-                                ArtistSearchDocument.class
-                        )
-                        .stream()
-                        .map(SearchHit::getContent)
-                        .toList();
+        List<ArtistSearchDocument> docs;
+
+        try {
+
+            docs = elasticsearchOperations
+                    .search(
+                            nativeQuery,
+                            ArtistSearchDocument.class
+                    )
+                    .stream()
+                    .map(SearchHit::getContent)
+                    .toList();
+
+        } catch (Exception e) {
+
+            log.error("작가 탐색 검색 실패, 빈 목록으로 응답", e);
+            return List.of();
+        }
 
         return docs.stream()
 
@@ -197,10 +206,23 @@ public class ArtistExploreService
                         .withMaxResults(30)
                         .build();
 
-        return elasticsearchOperations
-                .search(nativeQuery, ArtistSearchDocument.class)
-                .stream()
-                .map(SearchHit::getContent)
+        List<ArtistSearchDocument> docs;
+
+        try {
+
+            docs = elasticsearchOperations
+                    .search(nativeQuery, ArtistSearchDocument.class)
+                    .stream()
+                    .map(SearchHit::getContent)
+                    .toList();
+
+        } catch (Exception e) {
+
+            log.error("작가 이름 자동완성 검색 실패, 빈 목록으로 응답", e);
+            return List.of();
+        }
+
+        return docs.stream()
                 .map(ArtistSearchDocument::artistName)
                 .filter(name -> name != null && !name.isBlank())
                 .distinct()

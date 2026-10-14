@@ -57,7 +57,7 @@ public class ShareViewFlushJob {
         shareLinkRepository.findByToken(token)
                 .ifPresent(entity -> {
 
-                    entity.setViewCount(entity.getViewCount() + delta);
+                    entity.addViewCount(delta);
 
                     shareLinkRepository.save(entity);
                 });

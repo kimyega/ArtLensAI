@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "user_taste_embeddings")
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,4 +34,11 @@ public class UserTasteEmbeddingEntity {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public void updateTaste(float[] embdVect, int likeCnt) {
+
+        this.embdVect = embdVect;
+        this.likeCnt = likeCnt;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

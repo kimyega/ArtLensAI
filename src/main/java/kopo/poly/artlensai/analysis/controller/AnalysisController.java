@@ -21,10 +21,13 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriUtils;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/analysis/v1")
@@ -249,11 +252,14 @@ public class AnalysisController {
         try {
 
             String key =
-                    request.getRequestURI()
-                            .replace(
-                                    "/analysis/v1/api/image/",
-                                    ""
-                            );
+                    UriUtils.decode(
+                            request.getRequestURI()
+                                    .replace(
+                                            "/analysis/v1/api/image/",
+                                            ""
+                                    ),
+                            StandardCharsets.UTF_8
+                    );
 
             ResponseBytes<GetObjectResponse> obj =
                     s3Client.getObjectAsBytes(
@@ -264,9 +270,14 @@ public class AnalysisController {
                                     .build()
                     );
 
+            String contentType =
+                    obj.response().contentType();
+
             return ResponseEntity.ok()
                     .contentType(
-                            MediaType.IMAGE_JPEG
+                            contentType != null
+                                    ? MediaType.parseMediaType(contentType)
+                                    : MediaType.IMAGE_JPEG
                     )
                     .body(
                             obj.asByteArray()

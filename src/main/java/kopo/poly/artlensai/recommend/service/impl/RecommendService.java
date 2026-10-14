@@ -11,6 +11,7 @@ import kopo.poly.artlensai.recommend.domain.postgres.UserTasteEmbeddingRepositor
 import kopo.poly.artlensai.recommend.domain.postgres.entity.ArtistEmbeddingEntity;
 import kopo.poly.artlensai.recommend.domain.postgres.entity.UserTasteEmbeddingEntity;
 import kopo.poly.artlensai.recommend.dto.RecommendResponseDTO;
+import kopo.poly.artlensai.recommend.dto.RecommendSource;
 import kopo.poly.artlensai.recommend.dto.RecommendedArtistDTO;
 import kopo.poly.artlensai.recommend.event.TasteVectorInvalidatedEvent;
 import kopo.poly.artlensai.recommend.service.IRecommendService;
@@ -22,7 +23,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,12 +50,20 @@ public class RecommendService implements IRecommendService {
     @Transactional
     public void recomputeTaste(Long userId) {
 
+        log.info("{}.recomputeTaste Start! userId={}", getClass().getName(), userId);
+
         List<Long> likedArtistIds = findLikedArtistIds(userId);
+
+        log.info("{}.recomputeTaste likedArtistCount={}", getClass().getName(), likedArtistIds.size());
 
         if (likedArtistIds.isEmpty()) {
 
+            log.info("{}.recomputeTaste no liked artists, deleting taste vector", getClass().getName());
+
             userTasteEmbeddingRepository.deleteByUserId(userId);
             eventPublisher.publishEvent(new TasteVectorInvalidatedEvent(userId));
+
+            log.info("{}.recomputeTaste End!", getClass().getName());
             return;
         }
 
@@ -66,9 +74,13 @@ public class RecommendService implements IRecommendService {
 
         if (vectors.isEmpty()) {
 
+            log.info("{}.recomputeTaste no embeddings for liked artists, deleting taste vector", getClass().getName());
+
             // 찜한 작가들에 아직 임베딩이 하나도 없는 경우 (외부 파이프라인 지연 등)
             userTasteEmbeddingRepository.deleteByUserId(userId);
             eventPublisher.publishEvent(new TasteVectorInvalidatedEvent(userId));
+
+            log.info("{}.recomputeTaste End!", getClass().getName());
             return;
         }
 
@@ -77,17 +89,19 @@ public class RecommendService implements IRecommendService {
         UserTasteEmbeddingEntity entity = userTasteEmbeddingRepository.findByUserId(userId)
                 .orElseGet(() -> UserTasteEmbeddingEntity.builder().userId(userId).build());
 
-        entity.setEmbdVect(avgVector);
-        entity.setLikeCnt(likedArtistIds.size());
-        entity.setUpdatedAt(LocalDateTime.now());
+        entity.updateTaste(avgVector, likedArtistIds.size());
 
         userTasteEmbeddingRepository.save(entity);
 
         eventPublisher.publishEvent(new TasteVectorInvalidatedEvent(userId));
+
+        log.info("{}.recomputeTaste End! likeCnt={}", getClass().getName(), likedArtistIds.size());
     }
 
     @Override
     public RecommendResponseDTO getRecommendations(Long userId) {
+
+        log.info("{}.getRecommendations Start! userId={}", getClass().getName(), userId);
 
         String cacheKey = "recommend:" + userId;
 
@@ -95,8 +109,13 @@ public class RecommendService implements IRecommendService {
 
         if (cached != null) {
 
+            log.info("{}.getRecommendations cache hit! cacheKey={}", getClass().getName(), cacheKey);
+            log.info("{}.getRecommendations End! {}", getClass().getName(), cached);
+
             return cached;
         }
+
+        log.info("{}.getRecommendations cache miss, cacheKey={}", getClass().getName(), cacheKey);
 
         Optional<UserTasteEmbeddingEntity> taste = userTasteEmbeddingRepository.findByUserId(userId);
 
@@ -105,6 +124,8 @@ public class RecommendService implements IRecommendService {
                 .orElseGet(this::popularFallback);
 
         writeCache(cacheKey, result);
+
+        log.info("{}.getRecommendations End! {}", getClass().getName(), result);
 
         return result;
     }
@@ -121,12 +142,10 @@ public class RecommendService implements IRecommendService {
 
         List<Long> likedArtistIds = findLikedArtistIds(userId);
 
-        List<Long> excludeIds = likedArtistIds.isEmpty() ? List.of(-1L) : likedArtistIds;
-
         String tasteVecLiteral = VectorMath.toPgVectorLiteral(taste.getEmbdVect());
 
         List<SimilarArtistRow> candidates = artistEmbeddingRepository.findSimilarArtists(
-                tasteVecLiteral, excludeIds, CANDIDATE_LIMIT
+                tasteVecLiteral, likedArtistIds, CANDIDATE_LIMIT
         );
 
         if (candidates.isEmpty()) {
@@ -153,7 +172,7 @@ public class RecommendService implements IRecommendService {
                 .toList();
 
         return RecommendResponseDTO.builder()
-                .source(RecommendResponseDTO.SOURCE_PERSONALIZED)
+                .source(RecommendSource.PERSONALIZED)
                 .items(items)
                 .build();
     }
@@ -204,7 +223,7 @@ public class RecommendService implements IRecommendService {
                 .toList();
 
         return RecommendResponseDTO.builder()
-                .source(RecommendResponseDTO.SOURCE_POPULAR_FALLBACK)
+                .source(RecommendSource.POPULAR_FALLBACK)
                 .items(items)
                 .build();
     }

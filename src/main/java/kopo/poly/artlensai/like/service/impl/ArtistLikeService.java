@@ -25,19 +25,29 @@ public class ArtistLikeService implements IArtistLikeService {
     @Override
     public LikeStatusDTO getLikedStatus(Long userId) {
 
+        log.info("{}.getLikedStatus Start! userId={}", getClass().getName(), userId);
+
         var likes = artistLikeRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
-        return LikeStatusDTO.builder()
+        LikeStatusDTO result = LikeStatusDTO.builder()
                 .artistIds(likes.stream().map(ArtistLikeEntity::getArtistId).toList())
                 .likeCount(likes.size())
                 .build();
+
+        log.info("{}.getLikedStatus End! {}", getClass().getName(), result);
+
+        return result;
     }
 
     @Override
     @Transactional
     public LikeToggleResponseDTO like(Long userId, Long artistId) {
 
+        log.info("{}.like Start! userId={}, artistId={}", getClass().getName(), userId, artistId);
+
         boolean alreadyLiked = artistLikeRepository.findByUserIdAndArtistId(userId, artistId).isPresent();
+
+        log.info("{}.like alreadyLiked={}", getClass().getName(), alreadyLiked);
 
         if (!alreadyLiked) {
 
@@ -52,14 +62,22 @@ public class ArtistLikeService implements IArtistLikeService {
             recommendService.recomputeTaste(userId);
         }
 
-        return toResponse(userId, artistId, true);
+        LikeToggleResponseDTO result = toResponse(userId, artistId, true);
+
+        log.info("{}.like End! {}", getClass().getName(), result);
+
+        return result;
     }
 
     @Override
     @Transactional
     public LikeToggleResponseDTO unlike(Long userId, Long artistId) {
 
+        log.info("{}.unlike Start! userId={}, artistId={}", getClass().getName(), userId, artistId);
+
         boolean wasLiked = artistLikeRepository.findByUserIdAndArtistId(userId, artistId).isPresent();
+
+        log.info("{}.unlike wasLiked={}", getClass().getName(), wasLiked);
 
         if (wasLiked) {
 
@@ -68,7 +86,11 @@ public class ArtistLikeService implements IArtistLikeService {
             recommendService.recomputeTaste(userId);
         }
 
-        return toResponse(userId, artistId, false);
+        LikeToggleResponseDTO result = toResponse(userId, artistId, false);
+
+        log.info("{}.unlike End! {}", getClass().getName(), result);
+
+        return result;
     }
 
     private LikeToggleResponseDTO toResponse(Long userId, Long artistId, boolean liked) {

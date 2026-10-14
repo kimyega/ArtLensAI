@@ -1,6 +1,6 @@
 // ArtistStyleProfileDocument.java
 
-package kopo.poly.artlensai.artist.repository.mongo.document;
+package kopo.poly.artlensai.artist.domain.mongo.document;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;

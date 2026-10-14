@@ -2,10 +2,10 @@ package kopo.poly.artlensai.artist.service.impl;
 
 import kopo.poly.artlensai.analysis.dto.ArtistStyleProfileDTO;
 
-import kopo.poly.artlensai.artist.repository.elasticsearch.ArtistSearchRepository;
-import kopo.poly.artlensai.artist.repository.elasticsearch.document.ArtistSearchDocument;
-import kopo.poly.artlensai.artist.repository.mongo.ArtistStyleProfileRepository;
-import kopo.poly.artlensai.artist.repository.mongo.document.ArtistStyleProfileDocument;
+import kopo.poly.artlensai.artist.domain.elasticsearch.ArtistSearchRepository;
+import kopo.poly.artlensai.artist.domain.elasticsearch.document.ArtistSearchDocument;
+import kopo.poly.artlensai.artist.domain.mongo.ArtistStyleProfileRepository;
+import kopo.poly.artlensai.artist.domain.mongo.document.ArtistStyleProfileDocument;
 import kopo.poly.artlensai.artist.service.IArtistProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,9 +43,22 @@ public class ArtistProfileService implements IArtistProfileService {
         ArtistStyleProfileDocument saved =
                 repository.save(doc);
 
-        artistSearchRepository.save(
-                toSearchDocument(saved)
-        );
+        try {
+
+            artistSearchRepository.save(
+                    toSearchDocument(saved)
+            );
+
+        } catch (Exception e) {
+
+            // MongoDB 저장은 이미 성공한 뒤라, ES 색인 실패가 전체 저장 실패처럼 보이면 안 됨.
+            // 검색 인덱스만 일시적으로 어긋난 상태이므로 reindexAll()로 복구 가능.
+            log.error(
+                    "ES 색인 실패(MongoDB는 저장됨, 검색에서만 누락): artistId={}",
+                    pDTO.artistId(),
+                    e
+            );
+        }
 
         log.info(
                 "Artist profile saved : {}",

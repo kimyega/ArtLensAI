@@ -1,8 +1,8 @@
 package kopo.poly.artlensai.stylemap.service.impl;
 
 import kopo.poly.artlensai.analysis.repository.mongo.document.AnalysisResultsDocument;
-import kopo.poly.artlensai.artist.repository.mongo.ArtistStyleProfileRepository;
-import kopo.poly.artlensai.artist.repository.mongo.document.ArtistStyleProfileDocument;
+import kopo.poly.artlensai.artist.domain.mongo.ArtistStyleProfileRepository;
+import kopo.poly.artlensai.artist.domain.mongo.document.ArtistStyleProfileDocument;
 import kopo.poly.artlensai.stylemap.domain.postgres.entity.ArtistCoordEntity;
 import kopo.poly.artlensai.stylemap.dto.ArtistProfileDTO;
 import kopo.poly.artlensai.stylemap.dto.StyleMapArtistDTO;

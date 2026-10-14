@@ -12,7 +12,7 @@ import kopo.poly.artlensai.analysis.repository.postgres.AnalysisHistoryRepositor
 import kopo.poly.artlensai.analysis.repository.postgres.UploadImageRepository;
 import kopo.poly.artlensai.analysis.service.IAnalysisService;
 import kopo.poly.artlensai.analysis.service.IAnalysisUsageService;
-import kopo.poly.artlensai.artist.repository.mongo.ArtistStyleProfileRepository;
+import kopo.poly.artlensai.artist.domain.mongo.ArtistStyleProfileRepository;
 import kopo.poly.artlensai.user.dto.UserDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

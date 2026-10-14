@@ -1,6 +1,6 @@
 // ArtistSearchDocument.java
 
-package kopo.poly.artlensai.artist.repository.elasticsearch.document;
+package kopo.poly.artlensai.artist.domain.elasticsearch.document;
 
 import lombok.Builder;
 import org.springframework.data.annotation.Id;

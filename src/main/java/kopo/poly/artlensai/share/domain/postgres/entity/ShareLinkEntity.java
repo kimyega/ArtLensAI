@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "analysis_shares")
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -39,4 +38,14 @@ public class ShareLinkEntity {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    public void revoke() {
+
+        this.isPublic = false;
+    }
+
+    public void addViewCount(long delta) {
+
+        this.viewCount += delta;
+    }
 }

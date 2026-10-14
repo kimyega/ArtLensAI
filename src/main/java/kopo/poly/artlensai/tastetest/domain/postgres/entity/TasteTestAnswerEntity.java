@@ -6,7 +6,6 @@ import lombok.*;
 @Entity
 @Table(name = "taste_test_answers")
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

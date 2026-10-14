@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface ArtworkEmbeddingRepository
         extends JpaRepository<ArtworkEmbeddingEntity, Long> {
@@ -15,9 +16,34 @@ public interface ArtworkEmbeddingRepository
 
     /**
      * 클러스터별로 랜덤 이미지 1장씩 조회한다 (취향 테스트 초반 explore 문제용).
-     * excludeArtistIds는 비어있으면 안 됨(IN () 문법 에러) — 제외할 작가가 없으면
-     * 호출 측에서 더미 값(예: -1)을 하나 넣어서 호출해야 한다.
+     * excludeArtistIds가 비어있으면(IN () 문법 에러 방지) 내부적으로 더미 값을 채워서
+     * 실제 쿼리를 호출하므로, 호출 측은 빈 리스트를 그대로 넘겨도 된다.
      */
+    default List<ArtworkCandidateRow> findRandomPerCluster(List<Long> excludeArtistIds) {
+
+        return findRandomPerClusterInternal(safeExcludeIds(excludeArtistIds));
+    }
+
+    /**
+     * 주어진 벡터(vec)와 가장 가까운 이미지를 작가당 1장씩 조회한다
+     * (취향 테스트 후반 exploit 문제용). excludeArtistIds 더미값 규칙은 위와 동일.
+     */
+    default List<ArtworkCandidateRow> findNearestDistinctArtistArtworks(
+            String vec,
+            List<Long> excludeArtistIds,
+            int limit
+    ) {
+
+        return findNearestDistinctArtistArtworksInternal(vec, safeExcludeIds(excludeArtistIds), limit);
+    }
+
+    private static List<Long> safeExcludeIds(List<Long> excludeArtistIds) {
+
+        return Optional.ofNullable(excludeArtistIds)
+                .filter(ids -> !ids.isEmpty())
+                .orElseGet(() -> List.of(-1L));
+    }
+
     @Query(value = """
             SELECT DISTINCT ON (ac.cluster_label)
                    aw.img_id AS imgId,
@@ -29,14 +55,10 @@ public interface ArtworkEmbeddingRepository
             WHERE aw.artist_id NOT IN (:excludeArtistIds)
             ORDER BY ac.cluster_label, random()
             """, nativeQuery = true)
-    List<ArtworkCandidateRow> findRandomPerCluster(
+    List<ArtworkCandidateRow> findRandomPerClusterInternal(
             @Param("excludeArtistIds") List<Long> excludeArtistIds
     );
 
-    /**
-     * 주어진 벡터(vec)와 가장 가까운 이미지를 작가당 1장씩 조회한다
-     * (취향 테스트 후반 exploit 문제용). excludeArtistIds 더미값 규칙은 위와 동일.
-     */
     @Query(value = """
             SELECT sub.img_id AS imgId, sub.artist_id AS artistId, sub.img_url AS imgUrl
             FROM (
@@ -53,7 +75,7 @@ public interface ArtworkEmbeddingRepository
             ORDER BY sub.distance
             LIMIT :limit
             """, nativeQuery = true)
-    List<ArtworkCandidateRow> findNearestDistinctArtistArtworks(
+    List<ArtworkCandidateRow> findNearestDistinctArtistArtworksInternal(
             @Param("vec") String vec,
             @Param("excludeArtistIds") List<Long> excludeArtistIds,
             @Param("limit") int limit
